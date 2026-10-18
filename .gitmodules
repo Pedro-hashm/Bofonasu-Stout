@@ -1,0 +1,3 @@
+[submodule "for-desktop/assets"]
+	path = for-desktop/assets
+	url = https://github.com/stoatchat/assets.git
