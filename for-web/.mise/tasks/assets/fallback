@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Remove Stoat brand assets and use fallback"
+#MISE description="Use the bundled fallback assets"
 set -e
 
-git submodule deinit -f packages/client/assets
+echo "Using the client fallback assets."

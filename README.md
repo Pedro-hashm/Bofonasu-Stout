@@ -21,7 +21,7 @@ git clone --recurse-submodules https://github.com/Pedro-hashm/Bofonasu-Stout.git
 
 ## Desenvolvimento no Windows
 
-Instale o Git e o [mise](https://mise.jdx.dev/). As versões de Node.js e pnpm estão definidas nos arquivos `.mise/config.toml` de cada projeto.
+Instale o Git e o [mise](https://mise.jdx.dev/) (`winget install --id jdx.mise --exact`). Depois, abra um novo PowerShell para atualizar o PATH. As versões de Node.js e pnpm estão definidas nos arquivos `.mise/config.toml` de cada projeto.
 
 Em um terminal, inicie o cliente web:
 
@@ -44,7 +44,8 @@ mise exec -- pnpm start -- --force-server http://localhost:5173
 
 Para gerar os distribuíveis desktop, use `mise build` e `mise make` dentro de `for-desktop`.
 
+Os assets públicos do desktop são incluídos como submódulo. O cliente web usa os assets de fallback incluídos no próprio código.
+
 ## Licenças
 
 Os diretórios `for-web/` e `for-desktop/` mantêm os arquivos de licença dos respectivos projetos de origem. Consulte-os antes de redistribuir modificações.
-

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Pull in Stoat brand assets"
-#MISE depends=["assets:fallback"]
+#MISE description="Use the bundled fallback assets"
 set -e
 
-git -c submodule."packages/client/assets".update=checkout submodule update --init packages/client/assets
+echo "This fork does not include the private Stoat branding assets; the client will use its bundled fallback assets."

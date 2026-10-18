@@ -1,3 +1,9 @@
 [submodule "for-desktop/assets"]
 	path = for-desktop/assets
 	url = https://github.com/stoatchat/assets.git
+[submodule "for-web/packages/stoat.js"]
+	path = for-web/packages/stoat.js
+	url = https://github.com/stoatchat/javascript-client-sdk.git
+[submodule "for-web/packages/solid-livekit-components"]
+	path = for-web/packages/solid-livekit-components
+	url = https://github.com/revoltchat/solid-livekit-components.git
