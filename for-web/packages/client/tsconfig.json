@@ -46,7 +46,9 @@
       "@revolt/state": ["components/state"],
       "@revolt/state/*": ["components/state/*"],
       "@revolt/ui": ["components/ui"],
-      "@revolt/ui/*": ["components/ui/*"]
+      "@revolt/ui/*": ["components/ui/*"],
+      "@revolt/updates": ["components/updates"],
+      "@revolt/updates/*": ["components/updates/*"]
     }
   },
   "include": [

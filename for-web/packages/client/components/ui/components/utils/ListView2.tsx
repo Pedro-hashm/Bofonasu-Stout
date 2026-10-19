@@ -129,6 +129,9 @@ export function ListView2(props: Props) {
   return (
     <div
       ref={ref}
+      data-message-history
+      tabIndex={0}
+      aria-label="Histórico da conversa"
       use:scrollable={{
         direction: "y",
         class: container({
@@ -315,12 +318,14 @@ const container = cva({
   base: {
     display: "flex",
     flexDirection: "column-reverse",
+    flexShrink: 0,
   },
   variants: {
     parent: {
       true: {
-        height: "100%",
-        flexGrow: 1,
+        minHeight: 0,
+        minWidth: 0,
+        flex: "1 1 0px",
         overscrollBehaviorY: "contain",
       },
     },

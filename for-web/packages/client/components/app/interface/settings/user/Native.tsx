@@ -1,4 +1,5 @@
 import { createSignal, onMount } from "solid-js";
+import type { UpdateBridge } from "../../../../../../../../shared/updates";
 
 import { Trans, useLingui } from "@lingui/solid/macro";
 
@@ -41,7 +42,8 @@ declare global {
         ) => void,
       ): void;
       screenPickerCallback(idx: number, audio: boolean): void;
-      isWayland?(): boolean;
+      isWayland?(): Promise<boolean>;
+      updates?: UpdateBridge;
     };
 
     desktopConfig: {

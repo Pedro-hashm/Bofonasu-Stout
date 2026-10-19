@@ -3,6 +3,7 @@ import { For, Show, splitProps } from "solid-js";
 import { Portal } from "solid-js/web";
 import { Motion, Presence } from "solid-motionone";
 
+import { useState } from "@revolt/state";
 import { styled } from "styled-system/jsx";
 
 import { Button } from "./Button";
@@ -38,6 +39,14 @@ type Props = DialogProps & {
  * @specification https://m3.material.io/components/dialogs
  */
 export function Dialog(props: Props) {
+  const state = useState();
+  const motionDuration = () =>
+    state.theme.activeTheme.motion === "off" ||
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : state.theme.activeTheme.motion === "reduced"
+        ? 0.08
+        : 0.24;
   return (
     <Portal mount={document.getElementById("floating")!}>
       <Dialog.Scrim
@@ -52,16 +61,19 @@ export function Dialog(props: Props) {
         <Presence>
           <Show when={props.show}>
             <Motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: motionDuration() ? 12 : 0 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, easing: [0.05, 0.7, 0.1, 1.0] }}
+              exit={{ opacity: 0, y: 0 }}
+              transition={{
+                duration: motionDuration(),
+                easing: [0.22, 1, 0.36, 1],
+              }}
               class="dialog"
             >
               <Container
                 style={{
                   "min-width": props.minWidth
-                    ? `${props.minWidth}px`
+                    ? `min(${props.minWidth}px, calc(100vw - 40px))`
                     : undefined,
                   padding: props.padding ? `${props.padding}px` : undefined,
                 }}
@@ -187,7 +199,7 @@ const ScrimSurface = styled("div", {
     padding: {
       true: {
         padding: "80px",
-        _phone: { padding: "30px" },
+        _phone: { padding: "20px" },
       },
     },
     overflow: {
@@ -206,8 +218,11 @@ const Container = styled("div", {
   base: {
     padding: "24px",
     minWidth: "280px",
-    maxWidth: "560px",
-    borderRadius: "28px",
+    maxWidth: "min(560px, calc(100vw - 40px))",
+    maxHeight: "calc(100dvh - 40px)",
+    overflowY: "auto",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    borderRadius: "var(--borderRadius-xl)",
 
     display: "flex",
     flexDirection: "column",

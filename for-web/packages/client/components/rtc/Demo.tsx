@@ -198,7 +198,7 @@ export function LeParticipant() {
         <Show when={isMuted()}>
           <div
             class={css({
-              borderRadius: "100%",
+              borderRadius: "var(--borderRadius-circle)",
               background: isTrackReference(track) ? "#0006" : "#0001",
               padding: "1",
             })}

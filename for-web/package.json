@@ -2,6 +2,9 @@
   "name": "stoat-for-web",
   "version": "0.16.3",
   "description": "Stoat for Web: frontend software for Stoat",
+  "scripts": {
+    "dev": "node scripts/dev-local.cjs"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "eslint": "^9.26.0",

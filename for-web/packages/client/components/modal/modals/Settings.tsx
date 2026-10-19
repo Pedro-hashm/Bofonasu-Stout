@@ -16,7 +16,15 @@ import { Modals } from "../types";
 export function SettingsModal(
   props: DialogProps & Modals & { type: "settings" },
 ) {
-  const { setDiagDrawer } = useState();
+  const state = useState();
+  const { setDiagDrawer } = state;
+  const duration = () =>
+    state.theme.activeTheme.motion === "off" ||
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : state.theme.activeTheme.motion === "reduced"
+        ? 0.08
+        : 0.24;
   // eslint-disable-next-line solid/reactivity
   const config = SettingsConfigurations[props.config];
 
@@ -53,11 +61,11 @@ export function SettingsModal(
             <Motion.div
               ref={rootRef}
               class={settingsOverlay}
-              initial={{ opacity: 0, scale: 1.1 }}
+              initial={{ opacity: 0, scale: 1 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
+              exit={{ opacity: 0, scale: 1 }}
               transition={{
-                duration: 0.3,
+                duration: duration(),
                 easing: [0.17, 0.67, 0.58, 0.98],
               }}
             >

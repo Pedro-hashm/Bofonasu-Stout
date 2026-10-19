@@ -1,14 +1,23 @@
-import { useNavigate } from "@solidjs/router";
-import { Show } from "solid-js";
-
 import { useLingui } from "@lingui/solid/macro";
-import { styled } from "styled-system/jsx";
-
 import { useInstance } from "@revolt/instance";
 import { useVoice } from "@revolt/rtc";
+import { SoundboardButton } from "@revolt/rtc/soundboard/SoundboardControls";
 import { useState } from "@revolt/state";
-import { Button, IconButton } from "@revolt/ui/components/design";
-import { Symbol } from "@revolt/ui/components/utils/Symbol";
+import { useNavigate } from "@solidjs/router";
+import {
+  ArrowUpLeft,
+  HeadphoneOff,
+  Headphones,
+  Mic,
+  MicOff,
+  MonitorOff,
+  MonitorUp,
+  PhoneOff,
+  Video,
+  VideoOff,
+} from "lucide-solid";
+import { Show } from "solid-js";
+import { CallControlButton } from "./CallControlButton";
 
 export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
   const voice = useVoice();
@@ -16,160 +25,108 @@ export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
   const navigate = useNavigate();
   const { t } = useLingui();
   const { limits } = useInstance();
-
   return (
-    <Actions>
+    <div
+      class="ws-call-actions"
+      data-ui-sound="off"
+      data-size={props.size}
+      role="group"
+      aria-label={t`Call controls`}
+    >
       <Show when={props.size === "xs"}>
-        <IconButton
-          variant="standard"
-          size={props.size}
-          onPress={() => {
+        <CallControlButton
+          label={t`Return to voice channel`}
+          onClick={() => {
             navigate(voice.channel()?.path ?? "");
             state.appDrawer()?.setShown(true);
           }}
-          use:floating={{
-            tooltip: {
-              placement: "top",
-              content: t`Return to voice channel`,
-            },
-          }}
         >
-          <Symbol>arrow_top_left</Symbol>
-        </IconButton>
+          <ArrowUpLeft />
+        </CallControlButton>
       </Show>
-      <Show when={props.size !== "xs" && voice.layout() === "collapsed"}>
-        <IconButton
-          variant="standard"
-          size={props.size}
-          onPress={() => voice.toggleLayout("collapsed")}
-          use:floating={{
-            tooltip: {
-              placement: "top",
-              content: t`Restore call window`,
-            },
-          }}
-        >
-          <Symbol>unfold_more</Symbol>
-        </IconButton>
-      </Show>
-      <IconButton
-        size={props.size}
-        variant={voice.microphone() ? "filled" : "tonal"}
-        onPress={() => voice.toggleMute()}
-        use:floating={{
-          tooltip: {
-            placement: "top",
-            content: voice.speakingPermission
-              ? voice.microphone()
-                ? t`Mute`
-                : t`Unmute`
-              : t`Missing permission`,
-          },
-        }}
-        isDisabled={!voice.speakingPermission}
+      <CallControlButton
+        label={
+          !voice.speakingPermission
+            ? t`Missing permission`
+            : voice.microphone()
+              ? t`Mute`
+              : t`Unmute`
+        }
+        disabled={!voice.speakingPermission}
+        pressed={!voice.microphone()}
+        tone={!voice.microphone() ? "muted" : undefined}
+        onClick={() => voice.toggleMute()}
       >
-        <Show when={voice.microphone()} fallback={<Symbol>mic_off</Symbol>}>
-          <Symbol>mic</Symbol>
+        <Show when={voice.microphone()} fallback={<MicOff />}>
+          <Mic />
         </Show>
-      </IconButton>
-      <IconButton
-        size={props.size}
-        variant={voice.deafen() || !voice.listenPermission ? "tonal" : "filled"}
-        onPress={() => voice.toggleDeafen()}
-        use:floating={{
-          tooltip: {
-            placement: "top",
-            content: voice.listenPermission
-              ? voice.deafen()
-                ? t`Undeafen`
-                : t`Deafen`
-              : t`Missing permission`,
-          },
-        }}
-        isDisabled={!voice.listenPermission}
+      </CallControlButton>
+      <CallControlButton
+        label={
+          !voice.listenPermission
+            ? t`Missing permission`
+            : voice.deafen()
+              ? t`Undeafen`
+              : t`Deafen`
+        }
+        disabled={!voice.listenPermission}
+        pressed={voice.deafen()}
+        tone={voice.deafen() || !voice.listenPermission ? "muted" : undefined}
+        onClick={() => voice.toggleDeafen()}
       >
         <Show
-          when={voice.deafen() || !voice.listenPermission}
-          fallback={<Symbol>headset</Symbol>}
+          when={!voice.deafen() && voice.listenPermission}
+          fallback={<HeadphoneOff />}
         >
-          <Symbol>headset_off</Symbol>
+          <Headphones />
         </Show>
-      </IconButton>
-      <IconButton
-        size={props.size}
-        variant={limits().video && voice.video() ? "filled" : "tonal"}
-        onPress={() => {
+      </CallControlButton>
+      <CallControlButton
+        label={
+          !limits().video
+            ? t`Coming soon! 👀`
+            : voice.video()
+              ? t`Stop camera`
+              : t`Start camera`
+        }
+        disabled={!limits().video}
+        pressed={voice.video()}
+        tone={limits().video && voice.video() ? "active" : undefined}
+        onClick={() => {
           if (limits().video) voice.toggleCamera();
         }}
-        use:floating={{
-          tooltip: {
-            placement: "top",
-            content: limits().video
-              ? voice.video()
-                ? t`Stop camera`
-                : t`Start camera`
-              : t`Coming soon! 👀`,
-          },
-        }}
-        isDisabled={!limits().video}
       >
-        <Symbol>camera_video</Symbol>
-      </IconButton>
-      <IconButton
-        size={props.size}
-        variant={limits().video && voice.screenshare() ? "filled" : "tonal"}
-        onPress={() => {
+        <Show when={voice.video()} fallback={<VideoOff />}>
+          <Video />
+        </Show>
+      </CallControlButton>
+      <CallControlButton
+        label={
+          !limits().video
+            ? t`Coming soon! 👀`
+            : voice.screenshare()
+              ? t`Stop sharing`
+              : t`Share screen`
+        }
+        disabled={!limits().video}
+        pressed={voice.screenshare()}
+        tone={limits().video && voice.screenshare() ? "active" : undefined}
+        onClick={() => {
           if (limits().video) voice.toggleScreenshare();
         }}
-        use:floating={{
-          tooltip: {
-            placement: "top",
-            content: limits().video
-              ? voice.screenshare()
-                ? t`Stop sharing`
-                : t`Share screen`
-              : t`Coming soon! 👀`,
-          },
-        }}
-        isDisabled={!limits().video}
       >
-        <Show
-          when={!limits().video || voice.screenshare()}
-          fallback={<Symbol>stop_screen_share</Symbol>}
-        >
-          <Symbol>screen_share</Symbol>
+        <Show when={voice.screenshare()} fallback={<MonitorUp />}>
+          <MonitorOff />
         </Show>
-      </IconButton>
-      <Button
-        size={props.size}
-        variant="_error"
-        onPress={() => voice.disconnect()}
-        use:floating={{
-          tooltip: {
-            placement: "top",
-            content: t`End call`,
-          },
-        }}
+      </CallControlButton>
+      <CallControlButton
+        label={t`End call`}
+        tone="disconnect"
+        onClick={() => voice.disconnect()}
       >
-        <Symbol>call_end</Symbol>
-      </Button>
-    </Actions>
+        <PhoneOff />
+      </CallControlButton>
+      <SoundboardButton />
+    </div>
   );
 }
-
-const Actions = styled("div", {
-  base: {
-    flexShrink: 0,
-    gap: "var(--gap-md)",
-    padding: "var(--gap-md)",
-    zIndex: 2,
-
-    display: "flex",
-    width: "fit-content",
-    justifyContent: "center",
-    alignSelf: "center",
-
-    borderRadius: "var(--borderRadius-full)",
-    background: "var(--md-sys-color-surface-container)",
-  },
-});

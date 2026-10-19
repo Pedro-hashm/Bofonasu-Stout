@@ -321,7 +321,7 @@ const PreviewAvatar = styled("span", {
     width: "28px",
     height: "28px",
     flexShrink: 0,
-    borderRadius: "50%",
+    borderRadius: "var(--borderRadius-circle)",
   },
 });
 

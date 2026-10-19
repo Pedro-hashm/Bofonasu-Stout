@@ -13,9 +13,9 @@ import path from "node:path";
 // import { globSync } from "node:fs";
 
 const STRINGS = {
-  author: "Revolt Platforms LTD",
-  name: "Stoat",
-  execName: "stoat-desktop",
+  author: "Bofonasu Stout contributors",
+  name: "Bofonasu Stout",
+  execName: "bofonasu-stout",
   description: "Open source user-first chat platform.",
 };
 
@@ -26,7 +26,7 @@ const ASSET_DIR = "assets/desktop";
  */
 const makers: ForgeConfig["makers"] = [
   new MakerSquirrel({
-    name: STRINGS.name,
+    name: "BofonasuStout",
     authors: STRINGS.author,
     // todo: hoist this
     iconUrl: `https://stoat.chat/app/assets/icon-DUSNE-Pb.ico`,
@@ -34,7 +34,7 @@ const makers: ForgeConfig["makers"] = [
     setupIcon: `${ASSET_DIR}/icon.ico`,
     description: STRINGS.description,
     exe: `${STRINGS.execName}.exe`,
-    setupExe: `${STRINGS.execName}-setup.exe`,
+    setupExe: "Bofonasu-Stout-Setup.exe",
     copyright: "Copyright (C) 2025 Revolt Platforms LTD",
   }),
   new MakerZIP({}),
@@ -114,6 +114,17 @@ const config: ForgeConfig = {
   hooks: {
     // Copy the node-pipewire dist to the app on linux
     packageAfterCopy: async (_config, buildPath, _version, platform) => {
+      const frontend = path.resolve(
+        __dirname,
+        "../for-web/packages/client/dist",
+      );
+      if (!fs.existsSync(path.join(frontend, "index.html"))) {
+        throw new Error("Frontend não compilado. Execute pnpm build:win.");
+      }
+      fs.cpSync(frontend, path.join(buildPath, "frontend"), {
+        recursive: true,
+        filter: (file) => !file.endsWith(".map"),
+      });
       if (platform === "linux") {
         // Copy only the files we need to run the code, which is dist, LICENSE, and package.json
         fs.cpSync(
@@ -172,8 +183,8 @@ const config: ForgeConfig = {
   publishers: [
     new PublisherGithub({
       repository: {
-        owner: "stoatchat",
-        name: "for-desktop",
+        owner: "Pedro-hashm",
+        name: "Bofonasu-Stout",
       },
     }),
   ],

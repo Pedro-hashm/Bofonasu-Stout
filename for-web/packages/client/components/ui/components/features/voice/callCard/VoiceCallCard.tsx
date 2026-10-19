@@ -20,6 +20,7 @@ import { useVoice } from "@revolt/rtc";
 import { VoiceLayout } from "@revolt/rtc/state";
 import { useState } from "@revolt/state";
 import { SlideState } from "@revolt/ui/components/navigation/SlideDrawer";
+import { createShapeDensityVariables } from "@revolt/ui/themes/stoatWebTheme";
 
 import { VoiceCallCardActiveRoom } from "./VoiceCallCardActiveRoom";
 import { VoiceCallCardPiP } from "./VoiceCallCardPiP";
@@ -33,6 +34,7 @@ type Info = {
   pos: DOMRect;
   parentRect: DOMRect;
   drawer?: SlideState;
+  fitToPanel?: boolean;
 };
 
 const PAD = 16,
@@ -44,10 +46,18 @@ const callCardContext = createContext<(info?: Info) => void>();
 /** Voice call card context */
 export function VoiceCallCardContext(props: { children: JSX.Element }) {
   const voice = useVoice();
+  const state = useState();
   const inCall = () => !!voice.channel();
 
   const [mode, setMode] = createSignal<Mode>();
   const [info, setInfo] = createSignal<Info>();
+
+  // The workspace expands its slot before the floating call card is measured.
+  // This is transient: restoring a call never rewrites the user's saved layout.
+  createEffect(() =>
+    state.layout.setVoiceExpanded(voice.layout() === "expanded"),
+  );
+  onCleanup(() => state.layout.setVoiceExpanded(false));
 
   let ref: HTMLDivElement | undefined,
     events: AbortController | null,
@@ -125,7 +135,7 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
     } else if (inf?.pos && (!inf.drawer || inf.drawer === SlideState.SHOWN)) {
       sty.transform = `translate(${inf.pos.x}px, ${inf.pos.y}px)`;
       sty.width = `${inf.pos.width}px`;
-      sty.height = voice.layout() === "collapsed" ? "56px" : "";
+      sty.height = inf.fitToPanel ? `${inf.parentRect.height}px` : "";
       setMode();
     } else if (!inCall()) {
       const y = inf?.pos.y ?? ref.getBoundingClientRect().y;
@@ -151,27 +161,26 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
   onCleanup(resetEvents);
 
   onMount(() => {
-    document
-      .getElementById("floating")
-      ?.addEventListener("fullscreenchange", () => {
-        if (!document.fullscreenElement) voice.resetLayout();
-      });
+    const changed = () => {
+      if (!document.fullscreenElement && voice.layout() === "fullscreen")
+        voice.resetLayout();
+    };
+    document.addEventListener("fullscreenchange", changed);
+    onCleanup(() => document.removeEventListener("fullscreenchange", changed));
   });
 
   createEffect(() => {
+    const floating = document.getElementById("floating");
     if (voice.layout() === "fullscreen" && inCall()) {
+      // A presentation may own fullscreen inside this container.
       if (
-        !document
-          .getElementById("floating")
-          ?.isSameNode(document.fullscreenElement)
-      ) {
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        }
-        document.getElementById("floating")?.requestFullscreen();
-      }
-    } else if (document.fullscreenElement) {
-      document.exitFullscreen();
+        floating &&
+        (!document.fullscreenElement ||
+          !floating.contains(document.fullscreenElement))
+      )
+        void floating.requestFullscreen().catch(() => voice.resetLayout());
+    } else if (floating && document.fullscreenElement === floating) {
+      void document.exitFullscreen().catch(() => {});
     }
   });
 
@@ -180,6 +189,16 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
       {props.children}
       <Portal mount={document.getElementById("floating")! as HTMLDivElement}>
         <Float
+          style={{
+            ...createShapeDensityVariables(
+              state.theme.widgetCorners.voice ?? state.theme.cornerScale,
+              state.theme.widgetDensities.voice ?? state.theme.densityScale,
+            ),
+            "--md-sys-color-primary": state.theme.widgetAccents.voice,
+            "--ws-voice-bg":
+              state.theme.activeTheme.widgetBackgrounds.voice ??
+              "var(--md-sys-color-surface-container)",
+          }}
           ref={ref}
           mode={mode()}
           onPointerDown={mouseDown}
@@ -244,13 +263,21 @@ const Float = styled("div", {
 });
 
 /** 'Marker' to send position information for mounting the floating call card */
-export function VoiceChannelCallCardMount(props: { channel: Channel }) {
+export function VoiceChannelCallCardMount(props: {
+  channel: Channel;
+  fitToPanel?: boolean;
+}) {
   const voice = useVoice();
   const state = useState();
   const setInfo = useContext(callCardContext)!;
   let ref: HTMLDivElement | undefined;
 
   function updateInfo() {
+    if (!ref) return;
+    if (props.fitToPanel && !ref.getBoundingClientRect().width) {
+      setInfo();
+      return;
+    }
     const vc = voice.channel();
     setInfo(
       !vc || vc.id === props.channel.id
@@ -259,6 +286,7 @@ export function VoiceChannelCallCardMount(props: { channel: Channel }) {
             pos: ref!.getBoundingClientRect(),
             parentRect: ref!.parentElement!.getBoundingClientRect(),
             drawer: state.appDrawer()?.state,
+            fitToPanel: props.fitToPanel,
           }
         : undefined,
     );
@@ -271,12 +299,27 @@ export function VoiceChannelCallCardMount(props: { channel: Channel }) {
     if (!target) return;
 
     createResizeObserver(target, updateInfo);
+    window.addEventListener("stoat:layout", updateInfo);
+    window.addEventListener("resize", updateInfo);
+    onCleanup(() => {
+      window.removeEventListener("stoat:layout", updateInfo);
+      window.removeEventListener("resize", updateInfo);
+    });
   });
   onCleanup(() => {
     setInfo();
   });
 
-  return <div ref={ref!} />;
+  return (
+    <div
+      ref={ref!}
+      style={
+        props.fitToPanel
+          ? { width: "100%", height: "100%", "min-height": 0 }
+          : undefined
+      }
+    />
+  );
 }
 
 /**
@@ -291,7 +334,7 @@ function VoiceCallCard(props: {
   return (
     <Show when={props.showCard}>
       <Base layout={props.layout as never}>
-        <Card active={props.inCall} layout={props.layout}>
+        <Card class="ws-voice-card" active={props.inCall} layout={props.layout}>
           <Show
             when={props.inCall}
             fallback={<VoiceCallCardPreview channel={props.channel} />}
@@ -348,7 +391,9 @@ const Card = styled("div", {
     transitionTimingFunction: "ease-in-out",
 
     borderRadius: "var(--borderRadius-lg)",
-    background: "var(--md-sys-color-secondary-container)",
+    background: "var(--ws-voice-bg, var(--md-sys-color-surface-container))",
+    containerType: "inline-size",
+    border: "1px solid var(--md-sys-color-outline-variant)",
   },
   variants: {
     active: {
@@ -368,9 +413,6 @@ const Card = styled("div", {
       },
       expanded: {
         borderRadius: "var(--borderRadius-xl)",
-      },
-      collapsed: {
-        background: "none",
       },
     },
   },

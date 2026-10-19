@@ -1,0 +1,35 @@
+.voice-speaking-indicator {
+  position: relative;
+}
+.voice-speaking-indicator::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 var(--voice-speaking-ring-width, 3px)
+    var(--md-sys-color-primary);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 140ms ease-out;
+}
+.voice-speaking-indicator[data-speaking="true"]::after {
+  opacity: 1;
+  transition-duration: 60ms;
+}
+.voice-speaking-avatar {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--borderRadius-circle);
+  --voice-speaking-ring-width: 2px;
+}
+body[data-ui-motion="off"] .voice-speaking-indicator::after {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-speaking-indicator::after {
+    transition: none;
+  }
+}

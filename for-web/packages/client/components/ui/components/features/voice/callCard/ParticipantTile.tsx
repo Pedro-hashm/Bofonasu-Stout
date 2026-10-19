@@ -1,12 +1,10 @@
-import { createSignal, Show } from "solid-js";
 import {
-  TrackReference,
-  useEnsureParticipant,
-  useIsMuted,
-  useIsSpeaking,
-  useTrackRefContext,
-  VideoTrack,
-} from "solid-livekit-components";
+  type TrackReference,
+  type TrackReferenceOrPlaceholder,
+  isTrackReference,
+} from "@livekit/components-core";
+import { createSignal, Show, untrack } from "solid-js";
+import { useIsMuted } from "solid-livekit-components";
 
 import { Track } from "livekit-client";
 import { cva } from "styled-system/css";
@@ -15,6 +13,8 @@ import { styled } from "styled-system/jsx";
 import { UserContextMenu } from "@revolt/app";
 import { useUser } from "@revolt/markdown/users";
 import { useVoice } from "@revolt/rtc";
+import { RoomVideo } from "@revolt/rtc/living-room/RoomVideo";
+import { useSpeakingIndicator } from "@revolt/rtc/useSpeakingIndicator";
 import { useState } from "@revolt/state";
 import { Avatar } from "@revolt/ui/components/design";
 import { Row } from "@revolt/ui/components/layout";
@@ -22,8 +22,10 @@ import { OverflowingText } from "@revolt/ui/components/utils";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
 
 import { VoiceStatefulUserIcons } from "../VoiceStatefulUserIcons";
+import "../speakingIndicator.css";
 
 type TileProps = {
+  reference: TrackReferenceOrPlaceholder;
   focus?: boolean;
 };
 
@@ -33,11 +35,10 @@ type TileProps = {
 export function ParticipantTile(props: TileProps) {
   const voice = useVoice();
   const state = useState();
-  const participant = useEnsureParticipant();
-  const track = useTrackRefContext();
+  // The keyed list owns participant identity; track wrappers remain reactive.
+  const participant = untrack(() => props.reference.participant);
+  const track = () => props.reference;
   const user = useUser(participant.identity);
-
-  let videoRef: HTMLVideoElement | undefined;
 
   const [videoDims, setVideoDims] = createSignal<{
     height: number;
@@ -60,7 +61,8 @@ export function ParticipantTile(props: TileProps) {
   });
 
   const isScreenShareAudioUserMuted = () =>
-    !user().user!.self && state.voice.getScreenShareMuted(user().user!.id)
+    !participant.isLocal &&
+    state.voice.getScreenShareMuted(participant.identity)
       ? "by-user"
       : isScreenShareAudioMuted() || false;
 
@@ -69,9 +71,12 @@ export function ParticipantTile(props: TileProps) {
     source: Track.Source.Camera,
   });
 
-  const isVideo = () => !isVideoMuted();
-  const isScreenShare = () => track.source === Track.Source.ScreenShare;
-  const isSpeaking = useIsSpeaking(participant);
+  const isVideo = () =>
+    track().source === Track.Source.Camera &&
+    isTrackReference(track()) &&
+    !isVideoMuted();
+  const isScreenShare = () => track().source === Track.Source.ScreenShare;
+  const isSpeaking = useSpeakingIndicator(participant);
 
   const getHeight = () => {
     if (!props.focus || videoDims().height == 0) return {};
@@ -88,13 +93,15 @@ export function ParticipantTile(props: TileProps) {
       <div
         class={
           tile({
-            speaking: !isScreenShare() && isSpeaking(),
             video: isVideo() || isScreenShare(),
             fullscreen: voice.layout() === "fullscreen",
-            ...props,
-          }) + (isScreenShare() ? " vc_tile group" : " vc_tile")
+            focus: props.focus,
+          }) +
+          " vc_tile voice-speaking-indicator" +
+          (isScreenShare() ? " group" : "")
         }
-        onClick={() => voice.toggleFocus(track)}
+        data-speaking={!isScreenShare() && isSpeaking()}
+        onClick={() => voice.toggleFocus(track())}
         use:floating={{
           // TODO: Conflicts with focusing, maybe only show if clicking name itself
           //   userCard: {
@@ -125,24 +132,13 @@ export function ParticipantTile(props: TileProps) {
             </AvatarOnly>
           }
         >
-          <VideoTrack
-            style={{
-              "grid-area": "1/1",
-              "object-fit": "contain",
-              width: "100%",
-              height: "100%",
-              overflow: "hidden",
-            }}
-            trackRef={track as TrackReference}
-            manageSubscription={true}
-            ref={videoRef}
-            on:resize={() => {
-              setVideoDims({
-                height: videoRef?.videoHeight || 0,
-                width: videoRef?.videoWidth || 0,
-              });
-            }}
-          />
+          <Show when={isTrackReference(track())}>
+            <RoomVideo
+              reference={track() as TrackReference}
+              fit="contain"
+              onDimensions={(width, height) => setVideoDims({ width, height })}
+            />
+          </Show>
         </Show>
         <Overlay showOnHover={isScreenShare()}>
           <OverlayInner>
@@ -180,7 +176,8 @@ export const tile = cva({
   base: {
     display: "grid",
     aspectRatio: "16/9",
-    transition: "all .3s ease, width 0s, height 0s",
+    // The speaking ring has its own short opacity transition.
+    transition: "background-color .3s ease, border-radius .3s ease",
     borderRadius: "var(--borderRadius-lg)",
     width: "var(--vc-tile-width)",
     maxWidth: "calc(var(--vc-h) * 16 / 9)",
@@ -190,17 +187,8 @@ export const tile = cva({
     background: "#0002",
 
     overflow: "hidden",
-    outlineWidth: "3px",
-    outlineStyle: "solid",
-    outlineOffset: "-3px",
-    outlineColor: "transparent",
   },
   variants: {
-    speaking: {
-      true: {
-        outlineColor: "var(--md-sys-color-primary)",
-      },
-    },
     focus: {
       true: {
         width: "auto",

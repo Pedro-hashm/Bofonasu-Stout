@@ -51,7 +51,7 @@ export const Base = styled("div", {
       height: "12px",
       flexShrink: 0,
       alignSelf: "flex-end",
-      borderStartStartRadius: "4px",
+      borderStartStartRadius: "var(--borderRadius-xs)",
       borderInlineStart: "2px solid var(--md-sys-color-outline-variant)",
       borderTop: "2px solid var(--md-sys-color-outline-variant)",
     },

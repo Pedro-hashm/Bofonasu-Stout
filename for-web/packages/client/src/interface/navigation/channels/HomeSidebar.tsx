@@ -205,13 +205,14 @@ export const Header = styled("div", {
     userSelect: "none",
     overflow: "hidden",
     textOverflow: "ellipsis",
-    height: "48px",
-    lineHeight: "48px",
+    height: "56px",
+    lineHeight: "56px",
     verticalAlign: "middle",
-    margin: "var(--gap-md)",
-    marginLeft: "var(--gap-lg)",
+    margin: 0,
+    paddingInline: "16px",
+    borderBottom: "1px solid var(--md-sys-color-outline-variant)",
     color: "var(--md-sys-color-on-surface)",
-    backgroundColor: "var(--md-sys-color-surface-variant)",
+    backgroundColor: "transparent",
   },
 });
 
@@ -247,7 +248,9 @@ const Category = styled("div", {
     paddingBottom: "var(--gap-md)",
 
     ...typography.raw({ class: "label", size: "small" }),
-    fontSize: "13px",
+    fontSize: "calc(10px * var(--ui-font-scale, 1))",
+    textTransform: "uppercase",
+    letterSpacing: "0.8px",
   },
 });
 
@@ -275,7 +278,6 @@ function Entry(
   const [local, remote] = splitProps(props, ["channel", "active", "isMobile"]);
 
   const { t } = useLingui();
-  const { openModal } = useModals();
 
   /**
    * Determine user status if present

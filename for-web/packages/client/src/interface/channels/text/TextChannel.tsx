@@ -16,21 +16,13 @@ import { DraftMessages, Messages } from "@revolt/app";
 import { useClient } from "@revolt/client";
 import { Keybind, KeybindAction, createKeybind } from "@revolt/keybinds";
 import { useNavigate, useSmartParams } from "@revolt/routing";
-import { useState } from "@revolt/state";
-import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
-import {
-  BelowFloatingHeader,
-  Header,
-  NewMessages,
-  Text,
-  main,
-} from "@revolt/ui";
-import { VoiceChannelCallCardMount } from "@revolt/ui/components/features/voice/callCard/VoiceCallCard";
+import { BelowFloatingHeader, Header, NewMessages, Text } from "@revolt/ui";
 
 import { ChannelHeader } from "../ChannelHeader";
 import { ChannelPageProps } from "../ChannelPage";
 
 import { Channel } from "stoat.js";
+import { WorkspaceModule, useWorkspace } from "../../workspace/Workspace";
 import { MessageComposition } from "./Composition";
 import { isLargeServer } from "./largeServer";
 import { MemberSidebar } from "./MemberSidebar";
@@ -59,8 +51,9 @@ export function canIHasSidebar(ch: Channel) {
  * Channel component
  */
 export function TextChannel(props: ChannelPageProps) {
-  const state = useState();
   const client = useClient();
+  const workspace = useWorkspace();
+  const conversationVisible = () => workspace?.visible("conversation") ?? true;
 
   // Last unread message id
   const [lastId, setLastId] = createSignal<string>();
@@ -100,7 +93,7 @@ export function TextChannel(props: ChannelPageProps) {
   createEffect(
     on(
       // must be at the end of the conversation
-      () => props.channel.unread && atEnd(),
+      () => props.channel.unread && atEnd() && conversationVisible(),
       (unread) => {
         if (unread) {
           if (document.hasFocus()) {
@@ -120,7 +113,7 @@ export function TextChannel(props: ChannelPageProps) {
 
   // Mark as read on re-focus
   function onFocus() {
-    if (props.channel.unread && atEnd()) {
+    if (props.channel.unread && atEnd() && conversationVisible()) {
       props.channel.ack();
     }
   }
@@ -167,6 +160,9 @@ export function TextChannel(props: ChannelPageProps) {
   const [sidebarState, setSidebarState] = createSignal<SidebarState>({
     state: "default",
   });
+  createEffect(() => {
+    if (sidebarState().state !== "default") workspace?.reveal("members");
+  });
 
   // todo: in the future maybe persist per ID?
   createEffect(
@@ -192,30 +188,25 @@ export function TextChannel(props: ChannelPageProps) {
 
   return (
     <>
-      <Header placement="primary">
+      <Header placement="primary" class="ws-channel-header">
         <ChannelHeader
           channel={props.channel}
           sidebarState={sidebarState}
           setSidebarState={setSidebarState}
         />
       </Header>
-      <Content>
-        <main class={main()}>
-          <Show
-            when={canConnect()}
-            fallback={
-              <BelowFloatingHeader>
-                <div>
-                  <NewMessages
-                    lastId={lastId}
-                    jumpBack={() => navigate(lastId()!)}
-                    dismiss={() => setLastId()}
-                  />
-                </div>
-              </BelowFloatingHeader>
-            }
-          >
-            <VoiceChannelCallCardMount channel={props.channel} />
+      <div class="ws-conversation-body">
+        <main class="ws-chat-main">
+          <Show when={!canConnect()}>
+            <BelowFloatingHeader>
+              <div>
+                <NewMessages
+                  lastId={lastId}
+                  jumpBack={() => navigate(lastId()!)}
+                  dismiss={() => setLastId()}
+                />
+              </div>
+            </BelowFloatingHeader>
           </Show>
 
           <Messages
@@ -239,16 +230,13 @@ export function TextChannel(props: ChannelPageProps) {
             onMessageSend={() => jumpToBottomRef?.()}
           />
         </main>
-        <Show
-          when={
-            (state.layout.getSectionState(
-              LAYOUT_SECTIONS.MEMBER_SIDEBAR,
-              true,
-            ) &&
-              canIHasSidebar(props.channel)) ||
-            sidebarState().state !== "default"
-          }
-        >
+      </div>
+      <Show
+        when={
+          canIHasSidebar(props.channel) || sidebarState().state !== "default"
+        }
+      >
+        <WorkspaceModule id="members">
           <div
             ref={sidebarScrollTargetElement}
             use:scrollable={{
@@ -257,7 +245,8 @@ export function TextChannel(props: ChannelPageProps) {
               class: sidebar(),
             }}
             style={{
-              width: sidebarState().state !== "default" ? "360px" : "",
+              width: "100%",
+              height: "100%",
             }}
           >
             <Switch
@@ -302,28 +291,18 @@ export function TextChannel(props: ChannelPageProps) {
             <Show when={sidebarState().state !== "default"}>
               <Keybind
                 keybind={KeybindAction.CLOSE_SIDEBAR}
-                onPressed={() => setSidebarState({ state: "default" })}
+                onPressed={() => {
+                  setSidebarState({ state: "default" });
+                  if (workspace?.narrow()) workspace.reveal("conversation");
+                }}
               />
             </Show>
           </div>
-        </Show>
-      </Content>
+        </WorkspaceModule>
+      </Show>
     </>
   );
 }
-
-/**
- * Main content row layout
- */
-const Content = styled("div", {
-  base: {
-    display: "flex",
-    flexDirection: "row",
-    flexGrow: 1,
-    minWidth: 0,
-    minHeight: 0,
-  },
-});
 
 /**
  * Base styles
@@ -345,7 +324,7 @@ const sidebar = cva({
 const WideSidebarContainer = styled("div", {
   base: {
     paddingRight: "var(--gap-md)",
-    width: "360px",
+    width: "100%",
   },
 });
 

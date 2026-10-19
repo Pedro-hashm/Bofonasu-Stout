@@ -127,7 +127,7 @@ const HintCard = styled("div", {
     padding: "12px 14px",
     color: "var(--md-sys-color-on-surface)",
     background: "var(--md-sys-color-surface-container-highest)",
-    borderRadius: "14px",
+    borderRadius: "var(--borderRadius-md)",
     boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)",
     fontSize: "0.85rem",
     lineHeight: 1.45,
@@ -143,7 +143,7 @@ const HintCard = styled("div", {
       height: "10px",
       background: "inherit",
       transform: "rotate(45deg)",
-      borderRadius: "2px",
+      borderRadius: "var(--borderRadius-xs)",
     },
 
     "& strong": {

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "repository": "Pedro-hashm/Bofonasu-Stout",
+  "versions": [
+    {
+      "version": "1.7.0",
+      "date": "2026-10-18",
+      "title": "Acesso rápido aos servidores",
+      "changes": [
+        "Nova aba discreta na lateral esquerda para mostrar ou ocultar servidores e amigos sem abrir o editor de layout.",
+        "O módulo de servidores aparece acima dos outros módulos no desktop, inclusive quando a chamada está expandida, preservando posição e tamanho.",
+        "A visibilidade continua salva localmente; o botão permite acesso pelo teclado e respeita a preferência de movimento reduzido."
+      ]
+    },
+    {
+      "version": "1.6.0",
+      "date": "2026-10-18",
+      "title": "Atualizações automáticas e histórico de versões",
+      "changes": [
+        "O desktop instalado verifica atualizações ao abrir e a cada 30 minutos e baixa novas versões em segundo plano.",
+        "Nova seção Atualizações e novidades nas configurações, com a versão instalada, a versão mais recente e o histórico de mudanças.",
+        "Indicador discreto de atualização disponível e botão para reiniciar após o download, com proteção durante chamadas.",
+        "Versionamento e preparação de releases passam a usar um histórico único, incluído também na build para consulta offline.",
+        "Inicialização web com cache de dependências estável, limpeza do antigo service worker de desenvolvimento e compilação das macros do Lingui em arquivos TypeScript.",
+        "Correções de sintaxe nos catálogos de tradução catalão, árabe, albanês e sueco.",
+        "O build Windows prepara um runtime Node compatível no próprio projeto, com verificação SHA-256, evitando incompatibilidades do empacotador com o Node do sistema."
+      ]
+    },
+    {
+      "version": "1.5.5",
+      "date": "2026-10-18",
+      "title": "Grade de chamada e ambiente de desenvolvimento",
+      "changes": [
+        "A grade da chamada recebe referências explícitas dos participantes e utiliza o mesmo player de vídeo do Living Room.",
+        "Participantes sem câmera exibem o avatar; a opção de ocultar outros participantes deixa de ocultar toda a grade ao sair do foco.",
+        "Ajustes de dimensionamento da grade e de identidade das dependências compartilhadas.",
+        "Recuperação do runtime do pnpm no Windows e novo lançador local para o Vite."
+      ]
+    },
+    {
+      "version": "1.5.4",
+      "date": "2026-10-18",
+      "title": "Primeira distribuição personalizada para Windows",
+      "changes": [
+        "Instalador e ZIP do Bofonasu Stout com a interface personalizada e os sons incluídos no aplicativo.",
+        "Perfil próprio, separado do Stoat oficial, e carregamento da interface a partir da build local.",
+        "Living Room personalizável, presets, chat sobreposto, organização de participantes e áreas de apresentação.",
+        "Soundboard compartilhado e opções de áudio espacial.",
+        "Captura de áudio de apresentação no desktop Windows 11 com exclusão do áudio do próprio cliente."
+      ]
+    }
+  ]
+}

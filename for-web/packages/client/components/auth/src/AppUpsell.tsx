@@ -101,7 +101,7 @@ const QrTile = styled("div", {
     display: "grid",
     padding: "8px",
     background: "#fff",
-    borderRadius: "14px",
+    borderRadius: "var(--borderRadius-md)",
   },
 });
 
@@ -113,7 +113,7 @@ const DownloadButton = styled("a", {
     padding: "12px 20px",
     color: "#211b31",
     background: "#f8f6ff",
-    borderRadius: "999px",
+    borderRadius: "var(--borderRadius-full)",
     fontSize: "0.9rem",
     fontWeight: 700,
     textDecoration: "none",
@@ -161,7 +161,7 @@ const DesktopWindow = styled("img", {
     height: "118%",
     maxWidth: "none",
     border: "1px solid rgba(255, 255, 255, 0.1)",
-    borderRadius: "14px",
+    borderRadius: "var(--borderRadius-md)",
     boxShadow: "0 24px 60px rgba(0, 0, 0, 0.45)",
     pointerEvents: "none",
     userSelect: "none",

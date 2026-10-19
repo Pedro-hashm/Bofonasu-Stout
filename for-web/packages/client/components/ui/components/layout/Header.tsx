@@ -20,8 +20,9 @@ export const Header = styled("div", {
     fontWeight: 600,
     userSelect: "none",
     overflow: "hidden",
-    height: "48px",
-    borderRadius: "var(--borderRadius-lg)",
+    height: "56px",
+    borderRadius: "0",
+    paddingInline: "16px",
 
     color: "var(--md-sys-color-on-surface)",
     fill: "var(--md-sys-color-on-surface)",
@@ -35,12 +36,13 @@ export const Header = styled("div", {
   variants: {
     placement: {
       primary: {
-        margin: "var(--gap-md) var(--gap-md) var(--gap-md) 0",
-        _phone: { marginLeft: "var(--gap-lg)" },
+        margin: 0,
+        borderBottom: "1px solid var(--md-sys-color-outline-variant)",
       },
       secondary: {
-        margin: "var(--gap-md)",
-        backgroundColor: "var(--md-sys-color-surface-variant)",
+        margin: 0,
+        backgroundColor: "transparent",
+        borderBottom: "1px solid var(--md-sys-color-outline-variant)",
       },
     },
     image: {
@@ -72,7 +74,7 @@ export const Header = styled("div", {
       placement: "secondary",
       image: false,
       css: {
-        marginLeft: "var(--gap-lg)",
+        marginLeft: 0,
       },
     },
   ],

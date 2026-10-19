@@ -34,6 +34,7 @@ import {
 } from "@revolt/ui";
 import { VoiceStatus } from "@revolt/ui/components/design/VoiceStatus";
 import { Tooltip } from "@revolt/ui/components/floating";
+import { useWorkspace } from "@revolt/ui/lib/workspace";
 
 import { UserMenu } from "./UserMenu";
 import { RailEntry, createRailDrag } from "./railDrag";
@@ -85,6 +86,7 @@ interface Props {
  * Server list sidebar component
  */
 export const ServerList = (props: Props) => {
+  const workspace = useWorkspace();
   const state = useState();
   const client = useClient();
   const navigate = useNavigate();
@@ -272,6 +274,7 @@ export const ServerList = (props: Props) => {
             indicator: !props.selectedServer() ? "selected" : undefined,
           })}
           href="/app"
+          onClick={() => workspace?.reveal("conversation")}
           use:floating={{
             tooltip: {
               content:
@@ -483,6 +486,7 @@ function ServerEntry(props: {
   drag: RailDrag;
 }) {
   const state = useState();
+  const workspace = useWorkspace();
 
   // Mention count for the server badge, excluding channel-muted channels
   const mentions = () =>
@@ -553,6 +557,7 @@ function ServerEntry(props: {
           draggable="false"
           tabindex="0"
           href={state.layout.getLastActiveServerPath(props.server.id)}
+          onClick={() => workspace?.reveal("channels")}
         >
           <Avatar
             size={42}
@@ -786,7 +791,7 @@ const railInsertion = css({
   left: "6px",
   right: "6px",
   height: "4px",
-  borderRadius: "2px",
+  borderRadius: "var(--borderRadius-xs)",
   background: "var(--md-sys-color-primary)",
 });
 
@@ -875,7 +880,7 @@ const entryContainer = cva({
       height: "0px",
       transition: "var(--transitions-fast) all",
       left: "-8px",
-      borderRadius: "4px",
+      borderRadius: "var(--borderRadius-xs)",
       background: "var(--md-sys-color-on-surface)",
     },
 

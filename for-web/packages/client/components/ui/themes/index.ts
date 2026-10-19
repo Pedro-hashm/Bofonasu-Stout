@@ -3,4 +3,7 @@ export {
   createMaterialColourVariables,
   createMduiColourTriplets,
 } from "./materialTheme";
-export { createStoatWebVariables } from "./stoatWebTheme";
+export {
+  createShapeDensityVariables,
+  createStoatWebVariables,
+} from "./stoatWebTheme";

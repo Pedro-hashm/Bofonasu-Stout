@@ -29,6 +29,7 @@ import MdSettings from "@material-design-icons/svg/outlined/settings.svg?compone
 
 import MdKeep from "../../svg/keep.svg?component-solid";
 import { HeaderIcon } from "../common/CommonHeader";
+import { useWorkspace } from "../workspace/Workspace";
 
 import { canIHasSidebar, SidebarState } from "./text/TextChannel";
 
@@ -59,6 +60,7 @@ export function ChannelHeader(props: Props) {
   const state = useState();
   const voice = useVoice();
   const { layout } = useDevice();
+  const workspace = useWorkspace();
 
   const searchValue = () => {
     if (!props.sidebarState) return null;
@@ -227,6 +229,12 @@ export function ChannelHeader(props: Props) {
       <Show when={props.sidebarState && canIHasSidebar(props.channel)}>
         <IconButton
           onPress={() => {
+            if (workspace) {
+              if (workspace.narrow()) workspace.reveal("members");
+              else state.layout.toggleWidget("members");
+              props.setSidebarState!({ state: "default" });
+              return;
+            }
             if (props.sidebarState!().state === "default") {
               state.layout.toggleSectionState(
                 LAYOUT_SECTIONS.MEMBER_SIDEBAR,
@@ -277,6 +285,7 @@ export function ChannelHeader(props: Props) {
           }
         >
           <SearchBox
+            class="ws-channel-search"
             placeholder="Search messages..."
             value={searchValue()!}
             onChange={(e) =>

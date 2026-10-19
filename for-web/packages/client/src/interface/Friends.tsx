@@ -9,7 +9,7 @@ import {
   splitProps,
 } from "solid-js";
 
-import { Trans, useLingui } from "@lingui/solid/macro";
+import { Trans } from "@lingui/solid/macro";
 import { VirtualContainer } from "@minht11/solid-virtual-container";
 import type { User } from "stoat.js";
 import { styled } from "styled-system/jsx";
@@ -19,18 +19,13 @@ import { useClient } from "@revolt/client";
 import { useModals } from "@revolt/modal";
 import {
   Avatar,
-  Badge,
   Deferred,
   Header,
-  IconButton,
   List,
   ListItem,
   ListSubheader,
-  NavigationRail,
-  NavigationRailItem,
   OverflowingText,
   UserStatus,
-  main,
 } from "@revolt/ui";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
 
@@ -56,7 +51,6 @@ const Base = styled("div", {
  * Friends menu
  */
 export function Friends() {
-  const { t } = useLingui();
   const client = useClient();
   const { openModal } = useModals();
 
@@ -111,59 +105,54 @@ export function Friends() {
         <Trans>Friends</Trans>
       </Header>
 
-      <main class={main()}>
+      <main class="ws-friends">
         <div
           style={{
             position: "relative",
+            display: "flex",
+            "flex-direction": "column",
+            flex: 1,
             "min-height": 0,
           }}
         >
-          <NavigationRail contained value={page} onValue={setPage}>
-            <div style={{ "margin-top": "6px", "margin-bottom": "12px" }}>
-              <IconButton
-                variant="filled"
-                shape="square"
-                onPress={() =>
-                  openModal({
-                    type: "add_friend",
-                    client: client(),
-                  })
-                }
-                use:floating={{
-                  tooltip: {
-                    placement: "right",
-                    content: t`Add a new friend`,
-                  },
-                }}
-              >
-                <Symbol>add</Symbol>
-              </IconButton>
-            </div>
-
-            <NavigationRailItem
-              icon={<Symbol>waving_hand</Symbol>}
-              value="online"
+          <nav class="ws-friends-tabs" aria-label="Lista de amigos">
+            <button
+              data-active={page() === "online"}
+              onClick={() => setPage("online")}
             >
               <Trans>Online</Trans>
-            </NavigationRailItem>
-            <NavigationRailItem icon={<Symbol>all_inbox</Symbol>} value="all">
+            </button>
+            <button
+              data-active={page() === "all"}
+              onClick={() => setPage("all")}
+            >
               <Trans>All</Trans>
-            </NavigationRailItem>
-            <NavigationRailItem
-              icon={<Symbol>notifications</Symbol>}
-              value="pending"
+            </button>
+            <button
+              data-active={page() === "pending"}
+              onClick={() => setPage("pending")}
             >
               <Trans>Pending</Trans>
               <Show when={pending()}>
-                <Badge slot="badge" variant="large">
-                  {pending()}
-                </Badge>
+                <span>{pending()}</span>
               </Show>
-            </NavigationRailItem>
-            <NavigationRailItem icon={<Symbol>block</Symbol>} value="blocked">
+            </button>
+            <button
+              data-active={page() === "blocked"}
+              onClick={() => setPage("blocked")}
+            >
               <Trans>Blocked</Trans>
-            </NavigationRailItem>
-          </NavigationRail>
+            </button>
+            <button
+              class="ws-friends-add"
+              onClick={() =>
+                openModal({ type: "add_friend", client: client() })
+              }
+            >
+              <Symbol size={16}>add</Symbol>
+              <Trans>Add a new friend</Trans>
+            </button>
+          </nav>
 
           <Deferred>
             <div class="FriendsList" ref={scrollTargetElement} use:scrollable>

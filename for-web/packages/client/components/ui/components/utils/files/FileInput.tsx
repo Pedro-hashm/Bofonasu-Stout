@@ -232,10 +232,10 @@ const ImagePreview = styled("div", {
   variants: {
     rounded: {
       true: {
-        borderRadius: "50%",
+        borderRadius: "var(--borderRadius-circle)",
 
         "& img": {
-          borderRadius: "50%",
+          borderRadius: "var(--borderRadius-circle)",
         },
       },
       false: {

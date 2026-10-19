@@ -25,21 +25,108 @@ export function createMaterialColourVariables<P extends string>(
   prefix: P,
 ): addPrefixToObject<MaterialColours, P> {
   switch (theme.preset) {
-    case "you":
-      return Object.entries(
-        generateMaterialYouScheme(
-          theme.accent,
-          theme.darkMode,
-          theme.contrast,
-          theme.variant,
-        ),
-      ).reduce(
+    case "you": {
+      const scheme = generateMaterialYouScheme(
+        theme.accent,
+        theme.darkMode,
+        theme.contrast,
+        theme.variant,
+      );
+      const discordSurface = theme.darkMode
+        ? {
+            "surface-dim": "#232428",
+            surface: "#313338",
+            "surface-bright": "#3f4147",
+            "surface-container-lowest": "#1e1f22",
+            "surface-container-low": "#2b2d31",
+            "surface-container": "#313338",
+            "surface-container-high": "#383a40",
+            "surface-container-highest": "#404249",
+            "on-surface": "#f2f3f5",
+            "on-surface-variant": "#b5bac1",
+            outline: "#949ba4",
+            "outline-variant": "#4e5058",
+          }
+        : {
+            "surface-dim": "#e3e5e8",
+            surface: "#ffffff",
+            "surface-bright": "#ffffff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f2f3f5",
+            "surface-container": "#ffffff",
+            "surface-container-high": "#f2f3f5",
+            "surface-container-highest": "#e3e5e8",
+            "on-surface": "#313338",
+            "on-surface-variant": "#4e5058",
+            outline: "#747f8d",
+            "outline-variant": "#dbdee1",
+          };
+      const colors = {
+        ...scheme,
+        ...(theme.skin === "discord" ? discordSurface : {}),
+        ...(theme.skin === "studio"
+          ? theme.darkMode
+            ? {
+                "surface-dim": "#101215",
+                surface: "#191c20",
+                "surface-bright": "#292d33",
+                "surface-container-lowest": "#101215",
+                "surface-container-low": "#15181c",
+                "surface-container": "#191c20",
+                "surface-container-high": "#22262b",
+                "surface-container-highest": "#2b3036",
+                "on-surface": "#ecedf0",
+                "on-surface-variant": "#989ea8",
+                outline: "#7d8591",
+                "outline-variant": "#2b3037",
+              }
+            : {
+                "surface-dim": "#e9ecef",
+                surface: "#ffffff",
+                "surface-bright": "#ffffff",
+                "surface-container-lowest": "#edf0f3",
+                "surface-container-low": "#f7f8fa",
+                "surface-container": "#ffffff",
+                "surface-container-high": "#f0f2f5",
+                "surface-container-highest": "#e5e9ed",
+                "on-surface": "#20252b",
+                "on-surface-variant": "#5b6571",
+                outline: "#7a838e",
+                "outline-variant": "#dce1e6",
+              }
+          : {}),
+        ...(theme.colors.background
+          ? { "surface-container-lowest": theme.colors.background }
+          : {}),
+        ...(theme.colors.panel
+          ? {
+              surface: theme.colors.panel,
+              "surface-container": theme.colors.panel,
+              "surface-container-low": theme.colors.panel,
+            }
+          : {}),
+        ...(theme.colors.raised
+          ? {
+              "surface-container-high": theme.colors.raised,
+              "surface-container-highest": theme.colors.raised,
+            }
+          : {}),
+        ...(theme.colors.text ? { "on-surface": theme.colors.text } : {}),
+        ...(theme.colors.muted
+          ? { "on-surface-variant": theme.colors.muted }
+          : {}),
+        ...(theme.colors.border
+          ? { "outline-variant": theme.colors.border }
+          : {}),
+      };
+      return Object.entries(colors).reduce(
         (d, [key, value]) => ({
           ...d,
           [`${prefix}${key}`]: value,
         }),
         {} as addPrefixToObject<MaterialColours, P>,
       );
+    }
     default:
       return {} as never;
   }

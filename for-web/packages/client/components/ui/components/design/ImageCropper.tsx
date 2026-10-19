@@ -110,7 +110,7 @@ const CropBox = styled("div", {
   variants: {
     circle: {
       true: {
-        borderRadius: "100%",
+        borderRadius: "var(--borderRadius-circle)",
       },
     },
   },
@@ -184,7 +184,7 @@ const ErrorMessage = styled("div", {
     alignItems: "center",
     justifyContent: "center",
     color: "var(--md-sys-color-on-surface-variant)",
-    fontSize: "14px",
+    fontSize: "calc(14px * var(--ui-font-scale, 1))",
     textAlign: "center",
     padding: "16px",
   },

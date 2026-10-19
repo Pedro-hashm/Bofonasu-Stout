@@ -1,16 +1,30 @@
 import { useLingui } from "@lingui/solid/macro";
+import { getTrackReferenceId } from "@livekit/components-core";
+import { Key } from "@solid-primitives/keyed";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
-import { createEffect, createMemo, For, onMount, Show } from "solid-js";
-import { TrackLoop } from "solid-livekit-components";
+import { createEffect, onMount, Show } from "solid-js";
 import { styled } from "styled-system/jsx";
 
 import { useDevice } from "@revolt/common";
-import { InRoom, useVoice } from "@revolt/rtc";
+import { useVoice } from "@revolt/rtc";
+import { useState } from "@revolt/state";
 import { IconButton } from "@revolt/ui/components/design";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
 import { scrollableStyles } from "@revolt/ui/directives";
+import {
+  Armchair,
+  ArrowLeftRight,
+  ChevronDown,
+  Expand,
+  Maximize2,
+  Minimize2,
+  Shrink,
+} from "lucide-solid";
+import { CallControlButton } from "./CallControlButton";
+import { CallControlsTray } from "./CallControlsTray";
 
-import { ParticipantTile, tile } from "./ParticipantTile";
+import { LivingRoomCall } from "@revolt/rtc/living-room/LivingRoomCall";
+import { ParticipantTile } from "./ParticipantTile";
 import { VoiceCallCardActions } from "./VoiceCallCardActions";
 import { VoiceCallCardStatus } from "./VoiceCallCardStatus";
 
@@ -18,85 +32,89 @@ import { VoiceCallCardStatus } from "./VoiceCallCardStatus";
  * Call card (active)
  */
 export function VoiceCallCardActiveRoom() {
-  const voice = useVoice();
-  const collapsed = createMemo(() => voice.layout() === "collapsed");
+  const state = useState();
 
   return (
-    <View collapsed={collapsed()}>
-      <Participants />
-      <VoiceCallControls>
-        <VoiceCallControlHolder left collapsed={collapsed()}>
-          <VoiceCallCardStatus />
-        </VoiceCallControlHolder>
-        <VoiceCallCardActions size="sm" />
-        <VoiceCallControlHolder right collapsed={collapsed()}>
-          <LayoutButtons />
-        </VoiceCallControlHolder>
-      </VoiceCallControls>
+    <View>
+      <Show when={state.livingRoom.enabled} fallback={<Participants />}>
+        <LivingRoomCall />
+      </Show>
+      <CallControlsTray>
+        {(hide) => (
+          <VoiceCallControls class="ws-call-controls">
+            <VoiceCallControlHolder class="ws-call-control-holder" left>
+              <VoiceCallCardStatus />
+            </VoiceCallControlHolder>
+            <VoiceCallCardActions size="sm" />
+            <VoiceCallControlHolder class="ws-call-control-holder" right>
+              <LayoutButtons onHideTray={hide} />
+            </VoiceCallControlHolder>
+          </VoiceCallControls>
+        )}
+      </CallControlsTray>
     </View>
   );
 }
 
-function LayoutButtons() {
+function LayoutButtons(props: { onHideTray: () => void }) {
   const voice = useVoice();
   const device = useDevice();
+  const state = useState();
   const { t } = useLingui();
-
   return (
-    <>
-      {/* TODO: Refactor call controls on mobile to make these buttons not overflow */}
-      <Show when={device.layout() === "desktop"}>
-        <IconButton
-          size="sm"
-          variant="standard"
-          onPress={() => voice.toggleLayout("collapsed")}
-          use:floating={{
-            tooltip: {
-              placement: "top",
-              content: t`Collapse call window`,
-            },
-          }}
-        >
-          <Symbol>unfold_less</Symbol>
-        </IconButton>
-        <IconButton
-          size="sm"
-          variant="standard"
-          onPress={() => voice.toggleLayout("expanded")}
-          use:floating={{
-            tooltip: {
-              placement: "top",
-              content:
-                voice.layout() === "expanded"
-                  ? t`Restore call window`
-                  : t`Maximize call window`,
-            },
-          }}
-        >
-          <Show
-            when={voice.layout() === "expanded"}
-            fallback={<Symbol>open_in_full</Symbol>}
-          >
-            <Symbol>close_fullscreen</Symbol>
-          </Show>
-        </IconButton>
-      </Show>
-      <IconButton
-        size="sm"
-        variant={"standard"}
-        onPress={() => voice.toggleLayout("fullscreen")}
+    <div class="call-layout-controls">
+      <CallControlButton
+        label={
+          state.livingRoom.enabled
+            ? "Usar grade de participantes"
+            : "Usar Living Room"
+        }
+        pressed={state.livingRoom.enabled}
+        onClick={() => (state.livingRoom.enabled = !state.livingRoom.enabled)}
       >
-        <Show
-          when={voice.layout() === "fullscreen"}
-          fallback={<Symbol>fullscreen</Symbol>}
+        <Armchair />
+      </CallControlButton>
+      <CallControlButton
+        label="Esconder bandeja"
+        onClick={() => props.onHideTray()}
+      >
+        <ChevronDown />
+      </CallControlButton>
+      <Show when={device.layout() === "desktop"}>
+        <CallControlButton
+          label="Trocar posições de conversa e chamada"
+          onClick={() => state.layout.swapConversationVoice()}
         >
-          <Symbol>fullscreen_exit</Symbol>
+          <ArrowLeftRight />
+        </CallControlButton>
+        <CallControlButton
+          label={
+            voice.layout() === "expanded"
+              ? t`Restore call window`
+              : t`Maximize call window`
+          }
+          pressed={voice.layout() === "expanded"}
+          onClick={() => voice.toggleLayout("expanded")}
+        >
+          <Show when={voice.layout() === "expanded"} fallback={<Maximize2 />}>
+            <Minimize2 />
+          </Show>
+        </CallControlButton>
+      </Show>
+      <CallControlButton
+        label={
+          voice.layout() === "fullscreen" ? "Sair da tela cheia" : "Tela cheia"
+        }
+        pressed={voice.layout() === "fullscreen"}
+        onClick={() => voice.toggleLayout("fullscreen")}
+      >
+        <Show when={voice.layout() === "fullscreen"} fallback={<Expand />}>
+          <Shrink />
         </Show>
-      </IconButton>
-    </>
+      </CallControlButton>
+    </div>
   );
 }
-
 const TILE_MIN_WIDTH = "250px",
   TILE_MIN_FOCUS_HEIGHT = "100px";
 
@@ -107,15 +125,10 @@ function Participants() {
   const voice = useVoice();
   const { t } = useLingui();
 
-  // Modify this value to get test tracks
-  const testTrackCount = 0;
-
   let callRef: HTMLDivElement | undefined;
 
   const tileWidth = () => {
-    const vidWidth = Math.round(
-      100 / (voice.vidTracks().length + testTrackCount),
-    );
+    const vidWidth = Math.round(100 / Math.max(1, voice.vidTracks().length));
     return `max(${TILE_MIN_WIDTH}, ${vidWidth}% - var(--gap-md))`;
   };
 
@@ -135,7 +148,7 @@ function Participants() {
 
   return (
     <Call ref={callRef} class={voice.focusId() ? "" : scrollableStyles()}>
-      <InRoom>
+      <Show when={voice.room() && voice.state() === "CONNECTED"}>
         <FocusedParticipant />
         <Show when={voice.focusId()}>
           <ShowBarButtonHolder>
@@ -163,27 +176,18 @@ function Participants() {
         </Show>
         <Grid
           focus={!!voice.focusId()}
-          show={voice.showBar()}
+          show={!voice.focusId() || voice.showBar()}
           class={voice.focusId() ? scrollableStyles({ direction: "x" }) : ""}
           style={{ "--vc-tile-width": tileWidth() }}
         >
-          <TrackLoop
-            tracks={() => voice.vidTracks().filter((t) => !voice.isFocus(t))}
+          <Key
+            each={voice.vidTracks().filter((t) => !voice.isFocus(t))}
+            by={getTrackReferenceId}
           >
-            {() => <ParticipantTile />}
-          </TrackLoop>
-          <For each={Array(testTrackCount)}>
-            {() => (
-              <div
-                class={
-                  tile({ fullscreen: voice.layout() === "fullscreen" }) +
-                  " vc_tile"
-                }
-              />
-            )}
-          </For>
+            {(reference) => <ParticipantTile reference={reference()} />}
+          </Key>
         </Grid>
-      </InRoom>
+      </Show>
     </Call>
   );
 }
@@ -193,13 +197,13 @@ function FocusedParticipant() {
 
   return (
     <Show when={voice.focusTrack()}>
-      <TrackLoop tracks={() => [voice.focusTrack()!]}>
-        {() => (
+      <Key each={[voice.focusTrack()!]} by={getTrackReferenceId}>
+        {(reference) => (
           <FocusBox>
-            <ParticipantTile focus />
+            <ParticipantTile reference={reference()} focus />
           </FocusBox>
         )}
-      </TrackLoop>
+      </Key>
     </Show>
   );
 }
@@ -213,14 +217,9 @@ const View = styled("div", {
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
-    gap: "var(--gap-md)",
+    gap: 0,
     padding: "var(--gap-md)",
     transition: "padding var(--transitions-medium)",
-  },
-  variants: {
-    collapsed: {
-      true: { padding: 0 },
-    },
   },
 });
 
@@ -254,12 +253,6 @@ const VoiceCallControlHolder = styled("div", {
         justifyContent: "flex-end",
       },
     },
-    collapsed: {
-      true: {
-        opacity: 0,
-        pointerEvents: "none",
-      },
-    },
   },
 });
 
@@ -280,6 +273,8 @@ const Call = styled("div", {
     flexDirection: "column",
     gap: "var(--gap-sm)",
     flexGrow: 1,
+    flexBasis: 0,
+    width: "100%",
     minHeight: 0,
   },
 });
@@ -290,13 +285,16 @@ const Grid = styled("div", {
     flexWrap: "wrap",
     justifyContent: "safe center",
     alignContent: "safe center",
-    minHeight: "100%",
+    flex: "1 1 0%",
+    minHeight: 0,
+    width: "100%",
     gap: "var(--gap-md)",
   },
 
   variants: {
     focus: {
       true: {
+        flex: "0 0 auto",
         flexDirection: "column",
         height: `max(20%, ${TILE_MIN_FOCUS_HEIGHT})`,
         minHeight: 0,
@@ -311,6 +309,7 @@ const Grid = styled("div", {
     show: {
       false: {
         height: 0,
+        overflow: "hidden",
       },
     },
   },

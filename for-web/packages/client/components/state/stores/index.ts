@@ -9,6 +9,7 @@ import { TypeExperiments } from "./Experiments";
 import { TypeKeybinds } from "./Keybinds";
 import { TypeLayout } from "./Layout";
 import { TypeLinkSafety } from "./LinkSafety";
+import { TypeLivingRoom } from "./LivingRoom";
 import { TypeLocale } from "./Locale";
 import { TypeNotificationOptions } from "./NotificationOptions";
 import { TypeOrdering } from "./Ordering";
@@ -35,6 +36,7 @@ export type UnsyncedStore = {
   sync: TypeSynchronisation;
   theme: TypeTheme;
   voice: TypeVoice;
+  livingRoom: TypeLivingRoom;
 };
 
 export type SyncedStore = {

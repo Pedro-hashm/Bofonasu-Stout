@@ -5,6 +5,7 @@ import { cva } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 
 import { useState } from "@revolt/state";
+import { useWorkspace } from "@revolt/ui/lib/workspace";
 import { SlideState } from "../navigation/SlideDrawer";
 import { Ripple } from "./Ripple";
 import { Unreads } from "./Unreads";
@@ -54,6 +55,7 @@ export function MenuButton(
     JSX.HTMLAttributes<HTMLDivElement> & { href?: string },
 ) {
   const { appDrawer } = useState();
+  const workspace = useWorkspace();
   const [local, other] = splitProps(props, [
     "onClick",
     "noDrawer",
@@ -74,6 +76,7 @@ export function MenuButton(
   });
 
   function onClick(e: Event) {
+    if (other.href && !local.noDrawer) workspace?.reveal("conversation");
     if (!local.noDrawer) appDrawer()?.setShown(true);
     // @ts-expect-error callable listener
     if (local.onClick) local.onClick(e);
@@ -108,8 +111,10 @@ export function MenuButton(
       fallback={
         <div
           {...other}
+          data-active={local.attention === "selected"}
           onClick={onClick}
           classList={{
+            "ws-menu-entry": true,
             [base({
               attention: local.attention,
               size: local.size,
@@ -123,8 +128,10 @@ export function MenuButton(
     >
       <a
         {...other}
+        data-active={local.attention === "selected"}
         onClick={onClick}
         classList={{
+          "ws-menu-entry": true,
           [base({
             attention: local.attention,
             size: local.size,
@@ -146,7 +153,7 @@ const base = cva({
     flexShrink: 0,
 
     fontWeight: 500,
-    fontSize: "15px",
+    fontSize: "calc(15px * var(--ui-font-scale, 1))",
     userSelect: "none",
     cursor: "pointer",
 

@@ -3,7 +3,6 @@ import {
   TrackLoop,
   useEnsureParticipant,
   useIsMuted,
-  useIsSpeaking,
   useTracks,
 } from "solid-livekit-components";
 
@@ -15,11 +14,13 @@ import { styled } from "styled-system/jsx";
 import { UserContextMenu } from "@revolt/app";
 import { useUser } from "@revolt/markdown/users";
 import { InRoom } from "@revolt/rtc";
+import { useSpeakingIndicator } from "@revolt/rtc/useSpeakingIndicator";
 
 import { Avatar, Ripple, typography } from "../../design";
 import { Row } from "../../layout";
 
 import { VoiceStatefulUserIcons } from "./VoiceStatefulUserIcons";
+import "./speakingIndicator.css";
 
 /**
  * Render a preview of users (or the active participants) for a given channel
@@ -79,7 +80,7 @@ function ParticipantLive() {
     source: Track.Source.Microphone,
   });
 
-  const isSpeaking = useIsSpeaking(participant);
+  const isSpeaking = useSpeakingIndicator(participant);
 
   return (
     <CommonUser
@@ -149,7 +150,12 @@ function CommonUser(props: {
       }}
     >
       <Ripple />
-      <Avatar size={24} src={user().avatar} fallback={user().username} />{" "}
+      <span
+        class="voice-speaking-indicator voice-speaking-avatar"
+        data-speaking={rest.speaking}
+      >
+        <Avatar size={24} src={user().avatar} fallback={user().username} />
+      </span>{" "}
       <PreviewUsername>{user().username}</PreviewUsername>
       <Row gap="sm">
         <VoiceStatefulUserIcons {...iconProps} userId={rest.userId} />
@@ -187,12 +193,6 @@ const previewUser = cva({
     speaking: {
       true: {
         color: "var(--md-sys-color-on-surface)",
-
-        "& svg": {
-          outlineOffset: "1px",
-          outline: "2px solid var(--md-sys-color-primary)",
-          borderRadius: "var(--borderRadius-circle)",
-        },
       },
     },
   },

@@ -36,7 +36,7 @@ export const typography = cva({
 
       _status: {
         fontWeight: 400,
-        fontSize: "11px",
+        fontSize: "calc(11px * var(--ui-font-scale, 1))",
       },
     },
     size: {

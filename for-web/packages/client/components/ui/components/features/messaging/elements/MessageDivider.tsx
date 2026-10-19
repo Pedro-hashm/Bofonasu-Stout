@@ -54,7 +54,7 @@ const Unread = styled("div", {
 
     padding: "0 6px",
     marginTop: "-1px",
-    borderRadius: "60px",
+    borderRadius: "var(--borderRadius-full)",
   },
 });
 

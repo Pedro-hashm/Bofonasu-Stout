@@ -62,7 +62,7 @@ const Title = styled("span", {
     minWidth: 0,
     flexShrink: 1,
 
-    fontSize: "16px",
+    fontSize: "calc(16px * var(--ui-font-scale, 1))",
     color: "var(--md-sys-color-primary) !important",
   },
 });
@@ -75,7 +75,7 @@ const Content = styled(Column, {
 
 const Description = styled("div", {
   base: {
-    fontSize: "12px",
+    fontSize: "calc(12px * var(--ui-font-scale, 1))",
     overflow: "hidden",
     wordWrap: "break-word",
   },

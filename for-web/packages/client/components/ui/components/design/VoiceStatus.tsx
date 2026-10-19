@@ -24,7 +24,7 @@ const VoiceStatusSymbol = styled("div", {
     alignItems: "center",
     justifyContent: "center",
 
-    fontSize: "8px",
+    fontSize: "calc(8px * var(--ui-font-scale, 1))",
     fontWeight: 600,
 
     color: "var(--md-sys-color-on-surface)",

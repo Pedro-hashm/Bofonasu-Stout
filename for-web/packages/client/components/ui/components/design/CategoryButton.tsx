@@ -199,7 +199,7 @@ const Content = styled("div", {
     flexDirection: "column",
 
     fontWeight: 500,
-    fontSize: "14px",
+    fontSize: "calc(14px * var(--ui-font-scale, 1))",
     gap: "2px",
     whiteSpace: "nowrap",
     overflow: "hidden",

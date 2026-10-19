@@ -30,7 +30,13 @@ export function SettingsSidebar(props: {
    */
   onMount(() => {
     if (!props.page()) {
-      props.setPage(props.list().entries[0].entries[0].id);
+      props.setPage(
+        props
+          .list()
+          .entries.filter((category) => !category.hidden)
+          .flatMap((category) => category.entries)
+          .find((entry) => !entry.hidden && entry.id)?.id,
+      );
     }
   });
 
@@ -123,7 +129,7 @@ const Content = styled("div", {
   base: {
     minWidth: "230px",
     maxWidth: "300px",
-    padding: "74px 0 8px",
+    padding: "44px 0 8px",
     display: "flex",
     gap: "2px",
 
@@ -153,8 +159,9 @@ const CategoryTitle = styled("span", {
     textOverflow: "ellipsis",
 
     textTransform: "uppercase",
-    fontSize: "0.75rem",
-    fontWeight: 700,
+    fontSize: "10px",
+    fontWeight: 500,
+    letterSpacing: "0.8px",
     margin: "0 8px",
     marginInlineEnd: "20px",
 

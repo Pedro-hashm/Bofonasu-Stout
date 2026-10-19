@@ -37,8 +37,16 @@ import {
 import { VoiceCallCardContext } from "@revolt/ui/components/features/voice/callCard/VoiceCallCard";
 
 import { Device, useDevice } from "@revolt/common";
+import { DesktopUpdates } from "@revolt/updates";
 import { InRoom } from "./components/InRoom";
 import { RoomAudioManager } from "./components/RoomAudioManager";
+import { RoomSyncManager } from "./living-room/RoomSync";
+import {
+  createCallAudioContext,
+  registerCallAudioContext,
+  releaseCallAudioContext,
+} from "./living-room/spatialAudio";
+import { SoundboardProvider } from "./soundboard/Soundboard";
 import { VoiceProcessor } from "./VoiceProcessor";
 
 type State =
@@ -48,7 +56,7 @@ type State =
   | "CONNECTED"
   | "RECONNECTING";
 
-export type VoiceLayout = "fullscreen" | "expanded" | "collapsed" | undefined;
+export type VoiceLayout = "fullscreen" | "expanded" | undefined;
 
 type ScreenShareQuality = Required<
   Pick<ScreenShareCaptureOptions, "contentHint" | "resolution">
@@ -211,7 +219,10 @@ class Voice {
 
     this.device.setWakeLocked();
 
+    const playbackContext = createCallAudioContext();
     const room = new Room({
+      // Keep gain/boosting in the SDK's shared, resumable playback context.
+      webAudioMix: playbackContext ? { audioContext: playbackContext } : true,
       audioCaptureDefaults: {
         deviceId: this.#settings.preferredAudioInputDevice,
         echoCancellation: this.#settings.echoCancellation,
@@ -232,6 +243,9 @@ class Voice {
         screenShareEncoding: ScreenSharePresets.h720fps30.encoding,
       },
     });
+    registerCallAudioContext(room, playbackContext);
+    // Run in the join action before network awaits can lose user activation.
+    void room.startAudio().catch(() => {});
 
     this.vidTracks = useTracks(
       [
@@ -268,15 +282,37 @@ class Voice {
       this.sound.playSound("userJoinVoice");
     });
 
-    room.addListener("disconnected", () => this.#setState("DISCONNECTED"));
+    room.addListener("disconnected", () => {
+      releaseCallAudioContext(room);
+      if (this.state() === "CONNECTED") this.sound.playSound("userLeaveVoice");
+      this.#setState("DISCONNECTED");
+      this.screenShareTracks.clear();
+    });
 
     room.addListener("localTrackPublished", (pub) => {
+      if (
+        pub.source === Track.Source.ScreenShare &&
+        !this.screenShareTracks.has(pub.trackSid)
+      ) {
+        this.screenShareTracks.add(pub.trackSid);
+        this.sound.playSound("streamStart");
+      }
       if (pub.audioTrack && pub.audioTrack.source === Track.Source.Microphone) {
         if (!pub.audioTrack.getProcessor()) {
           pub.audioTrack?.setProcessor(
             (this.voiceProcessor = new VoiceProcessor(this.#settings)),
           );
         }
+      }
+    });
+
+    room.addListener("localTrackUnpublished", (pub) => {
+      if (
+        pub.source === Track.Source.ScreenShare &&
+        this.screenShareTracks.delete(pub.trackSid)
+      ) {
+        this.#setScreenshare(false);
+        this.sound.playSound("streamEnd");
       }
     });
 
@@ -289,17 +325,12 @@ class Voice {
     });
 
     room.addListener("trackPublished", (pub) => {
-      if (pub.source === Track.Source.ScreenShare) {
-        pub.once("subscribed", (track) => {
-          // Play the sound once playback starts, which might be quite a bit after subscription
-          // as it starts paused for the screen share settings modal.
-          track.once("videoPlaybackStarted", () => {
-            this.sound.playSound("streamStart");
-            if (track.sid) {
-              this.screenShareTracks.add(track.sid);
-            }
-          });
-        });
+      if (
+        pub.source === Track.Source.ScreenShare &&
+        !this.screenShareTracks.has(pub.trackSid)
+      ) {
+        this.screenShareTracks.add(pub.trackSid);
+        this.sound.playSound("streamStart");
       }
     });
 
@@ -335,7 +366,7 @@ class Voice {
       if (!room) return;
 
       room.removeAllListeners();
-      room.disconnect();
+      void room.disconnect().finally(() => releaseCallAudioContext(room));
 
       batch(() => {
         this.#setState("READY");
@@ -409,6 +440,9 @@ class Voice {
       );
 
       this.#setVideo(room.localParticipant.isCameraEnabled);
+      this.sound.playSound(
+        room.localParticipant.isCameraEnabled ? "cameraOn" : "cameraOff",
+      );
     } catch (e) {
       this.onErr(e);
     }
@@ -486,8 +520,6 @@ class Voice {
       await room.localParticipant.setScreenShareEnabled(false);
 
       this.#setScreenshare(room.localParticipant.isScreenShareEnabled);
-
-      this.sound.playSound("streamEnd");
     } else {
       const qualities = this.getEnabledScreenShareQualities();
       let screenPickerQualityName: ScreenShareQualityName | undefined;
@@ -549,8 +581,12 @@ class Voice {
           // This event is only fired if the screen share is ended by closing the window being streamed.
           // This catches the ending and disables screen sharing on our side. If this weren't here,
           // livekit would still share stream audio after closing the window being streamed.
-          localTrack.on("ended", () => {
-            this.toggleScreenshare();
+          localTrack.once("ended", () => {
+            if (this.room() !== room) return;
+            void room.localParticipant
+              .setScreenShareEnabled(false)
+              .then(() => this.#setScreenshare(false))
+              .catch((error) => this.onErr(error));
             const oldAudioTrack = room.localParticipant.getTrackPublication(
               Track.Source.ScreenShareAudio,
             );
@@ -580,7 +616,6 @@ class Voice {
               if (!audio && screenAudioTrack?.track) {
                 room.localParticipant.unpublishTrack(screenAudioTrack.track);
               }
-              this.sound.playSound("streamStart");
             }
           };
 
@@ -715,11 +750,15 @@ export function VoiceContext(props: { children: JSX.Element }) {
 
   return (
     <voiceContext.Provider value={voice}>
+      <DesktopUpdates />
       <RoomContext.Provider value={voice.room}>
-        <VoiceCallCardContext>{props.children}</VoiceCallCardContext>
-        <InRoom>
-          <RoomAudioManager />
-        </InRoom>
+        <RoomSyncManager />
+        <SoundboardProvider>
+          <VoiceCallCardContext>{props.children}</VoiceCallCardContext>
+          <InRoom>
+            <RoomAudioManager />
+          </InRoom>
+        </SoundboardProvider>
       </RoomContext.Provider>
     </voiceContext.Provider>
   );

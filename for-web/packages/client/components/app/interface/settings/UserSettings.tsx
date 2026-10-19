@@ -8,9 +8,10 @@ import { useClient, useClientLifecycle } from "@revolt/client";
 import { useInstance } from "@revolt/instance";
 import { useUser } from "@revolt/markdown/users";
 import { useModals } from "@revolt/modal";
-import { fetchLatestChangelog } from "@revolt/modal/modals/Changelog";
 import { ColouredText, Column, Text, iconSize } from "@revolt/ui";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
+import { UpdatesNavLabel, bundledVersion } from "@revolt/updates";
+import { Updates } from "@revolt/updates/Updates";
 
 import MdAccountCircle from "@material-design-icons/svg/outlined/account_circle.svg?component-solid";
 import MdCampaign from "@material-design-icons/svg/outlined/campaign.svg?component-solid";
@@ -27,8 +28,7 @@ import MdSmartToy from "@material-design-icons/svg/outlined/smart_toy.svg?compon
 import MdVerifiedUser from "@material-design-icons/svg/outlined/verified_user.svg?component-solid";
 import MdWorkspacePremium from "@material-design-icons/svg/outlined/workspace_premium.svg?component-solid";
 
-import pkg from "../../../../../../package.json";
-
+import { LivingRoomSettings } from "@revolt/rtc/living-room/RoomStudio";
 import { SettingsConfiguration } from ".";
 import { AccountCard, BackCard } from "./user/_AccountCard";
 import { MyAccount } from "./user/Account";
@@ -96,8 +96,12 @@ const Config: SettingsConfiguration<{ server: Server }> = {
         return <EditSubscription />;
       case "native":
         return <Native />;
+      case "updates":
+        return <Updates />;
       case "voice":
         return <VoiceSettings />;
+      case "living-room":
+        return <LivingRoomSettings />;
       case "notifications":
         return <Notifications isDesktop={!!window.native} />;
       default:
@@ -112,7 +116,7 @@ const Config: SettingsConfiguration<{ server: Server }> = {
    * @returns List
    */
   list(_, onClose) {
-    const { pop, openModal } = useModals();
+    const { pop } = useModals();
     const { logout } = useClientLifecycle();
     const { limits, config } = useInstance();
 
@@ -131,12 +135,12 @@ const Config: SettingsConfiguration<{ server: Server }> = {
             <span class={css({ userSelect: "none", fontWeight: "bold" })}>
               <Trans>Version:</Trans>
             </span>{" "}
-            <span class={css({ userSelect: "all" })}>{pkg.version}</span>
+            <span class={css({ userSelect: "all" })}>
+              {window.native?.versions.desktop() ?? bundledVersion}
+            </span>
           </Text>
           <Show when={window.native}>
-            <Text class="label">
-              Stoat for Desktop {window.native.versions.desktop()}
-            </Text>
+            <Text class="label">Bofonasu Stout Desktop</Text>
             <Text class="label">
               <span
                 class={css({
@@ -272,6 +276,11 @@ const Config: SettingsConfiguration<{ server: Server }> = {
               icon: <MdPalette {...iconSize(20)} />,
               title: <Trans>Appearance</Trans>,
             },
+            {
+              id: "living-room",
+              icon: <Symbol size={20}>weekend</Symbol>,
+              title: "Living Room",
+            },
             // {
             //   id: "accessibility",
             //   icon: <MdAccessibility {...iconSize(20)} />,
@@ -319,16 +328,12 @@ const Config: SettingsConfiguration<{ server: Server }> = {
         {
           entries: [
             {
-              onClick: async () => {
-                const changelog = await fetchLatestChangelog();
-                if (!changelog) return;
-                openModal({ type: "changelog", changelog });
-              },
+              id: "updates",
               icon: <MdCampaign {...iconSize(20)} />,
-              title: <Trans>What's New</Trans>,
+              title: <UpdatesNavLabel />,
             },
             {
-              href: "https://github.com/stoatchat",
+              href: "https://github.com/Pedro-hashm/Bofonasu-Stout",
               icon: <MdMemory {...iconSize(20)} />,
               title: <Trans>Source Code</Trans>,
             },

@@ -14,17 +14,12 @@ import {
 import windowIconAsset from "../../assets/desktop/icon.png?asset";
 
 import { config } from "./config";
+import { BUILD_URL } from "./frontend";
+import { screenAudioDevice } from "./screenAudio";
 import { updateTrayMenu } from "./tray";
 
 // global reference to main window
 export let mainWindow: BrowserWindow;
-
-// currently in-use build
-export const BUILD_URL = new URL(
-  app.commandLine.hasSwitch("force-server")
-    ? app.commandLine.getSwitchValue("force-server")
-    : /*MAIN_WINDOW_VITE_DEV_SERVER_URL ??*/ "https://stoat.chat/app",
-);
 
 // internal window state
 let shouldQuit = false;
@@ -89,9 +84,7 @@ export function createMainWindow() {
   }
 
   // load the entrypoint
-  mainWindow
-    .loadURL(BUILD_URL.toString())
-    .then(() => mainWindow.webContents.reload());
+  void mainWindow.loadURL(BUILD_URL.toString());
 
   // minimise window to tray
   mainWindow.on("close", (event) => {
@@ -205,7 +198,7 @@ export function createMainWindow() {
             request.audioRequested
               ? callback({
                   video: sources[0],
-                  audio: "loopback",
+                  audio: screenAudioDevice(),
                 })
               : callback({
                   video: sources[0],
@@ -215,13 +208,13 @@ export function createMainWindow() {
           ipcMain.once(
             "screenPickerCallback",
             (_, idx: number, audio: boolean) => {
-              if (idx < 0 || idx > sources.length) {
+              if (!Number.isInteger(idx) || idx < 0 || idx >= sources.length) {
                 callback({});
               } else {
-                audio
+                audio && request.audioRequested
                   ? callback({
                       video: sources[idx],
-                      audio: "loopback",
+                      audio: screenAudioDevice(),
                     })
                   : callback({
                       video: sources[idx],
@@ -270,8 +263,12 @@ export function createMainWindow() {
  * Quit the entire app
  */
 export function quitApp() {
-  shouldQuit = true;
+  prepareForQuit();
   mainWindow.close();
+}
+
+export function prepareForQuit() {
+  shouldQuit = true;
 }
 
 // Ensure global app quit works properly

@@ -4,7 +4,6 @@ import {
   TrackReference,
   useEnsureParticipant,
   useIsMuted,
-  useIsSpeaking,
   useTrackRefContext,
   useTracks,
   VideoTrack,
@@ -15,10 +14,12 @@ import { styled } from "styled-system/jsx";
 
 import { useUser } from "@revolt/markdown/users";
 import { useVoice } from "@revolt/rtc";
+import { useSpeakingIndicator } from "@revolt/rtc/useSpeakingIndicator";
 import { Avatar } from "@revolt/ui/components/design";
 import { Row } from "@revolt/ui/components/layout";
 import { Symbol } from "@revolt/ui/components/utils/Symbol";
 
+import "../speakingIndicator.css";
 import { VoiceCallCardActions } from "./VoiceCallCardActions";
 import { VoiceCallCardStatus } from "./VoiceCallCardStatus";
 
@@ -63,11 +64,11 @@ function ConnectedUser() {
     source: Track.Source.Microphone,
   });
 
-  const isSpeaking = useIsSpeaking(participant);
+  const isSpeaking = useSpeakingIndicator(participant);
   const user = useUser(participant.identity);
 
   return (
-    <UserIcon speaking={isSpeaking()}>
+    <UserIcon class="voice-speaking-indicator" data-speaking={isSpeaking()}>
       <Avatar
         size={24}
         src={user().avatar}
@@ -120,17 +121,10 @@ const UserIcon = styled("div", {
     color: "#fffb",
     overflow: "hidden",
     borderRadius: "var(--borderRadius-circle)",
+    "--voice-speaking-ring-width": "2px",
 
     "& *": {
       gridArea: "1/1",
-    },
-  },
-  variants: {
-    speaking: {
-      true: {
-        outlineOffset: "1px",
-        outline: "2px solid var(--md-sys-color-primary)",
-      },
     },
   },
 });

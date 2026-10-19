@@ -1,3 +1,5 @@
+import { useState } from "@revolt/state";
+import { animateEntrance } from "@revolt/ui/lib/motion";
 import {
   type JSX,
   Accessor,
@@ -5,12 +7,9 @@ import {
   createMemo,
   createSignal,
   Setter,
-  untrack,
+  Show,
   useContext,
 } from "solid-js";
-import { Motion, Presence } from "solid-motionone";
-
-import { Rerun } from "@solid-primitives/keyed";
 
 import { SettingsConfiguration, SettingsEntry, SettingsList } from ".";
 import { SettingsContent } from "./_layout/Content";
@@ -48,12 +47,12 @@ const SettingsNavigationContext = createContext<{
  * Generic Settings component
  */
 export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
+  const state = useState();
   const [page, setPage] = createSignal<undefined | string>(
     // eslint-disable-next-line
     (props.context as any)?.page,
   );
-  const [transition, setTransition] =
-    createSignal<SettingsTransition>("normal");
+
   const [action, setAction] = createSignal<(() => JSX.Element) | undefined>();
 
   /**
@@ -87,15 +86,6 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
 
     if (!id) return;
 
-    const current = page();
-    if (current?.startsWith(id)) {
-      setTransition("to-parent");
-    } else if (current && id.startsWith(current)) {
-      setTransition("to-child");
-    } else {
-      setTransition("normal");
-    }
-
     setPage(id);
   }
 
@@ -123,53 +113,23 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
               title={props.title}
               onClose={props.onClose}
             >
-              <Presence exitBeforeEnter>
-                <Rerun on={page}>
-                  <Motion.div
-                    style={
-                      untrack(transition) === "normal"
-                        ? {}
-                        : { visibility: "hidden" }
-                    }
+              <Show when={page()} keyed>
+                {(currentPage) => (
+                  <div
                     ref={(el) =>
-                      untrack(transition) !== "normal" &&
-                      setTimeout(() => (el.style.visibility = "visible"), 250)
+                      animateEntrance(
+                        el,
+                        state.theme.activeTheme.motion === "full",
+                      )
                     }
-                    initial={
-                      transition() === "normal"
-                        ? { opacity: 0, y: 50 }
-                        : transition() === "to-child"
-                          ? {
-                              x: "100vw",
-                            }
-                          : { x: "-100vw" }
-                    }
-                    animate={{
-                      opacity: 1,
-                      x: 0,
-                      y: 0,
-                    }}
-                    exit={
-                      transition() === "normal"
-                        ? undefined
-                        : transition() === "to-child"
-                          ? {
-                              x: "-100vw",
-                            }
-                          : { x: "100vw" }
-                    }
-                    transition={{
-                      duration: 0.2,
-                      easing: [0.17, 0.67, 0.58, 0.98],
-                    }}
                   >
                     {props.render(
-                      { page, onClose: props.onClose },
+                      { page: () => currentPage, onClose: props.onClose },
                       props.context,
                     )}
-                  </Motion.div>
-                </Rerun>
-              </Presence>
+                  </div>
+                )}
+              </Show>
             </SettingsContent>
           </>
         )}

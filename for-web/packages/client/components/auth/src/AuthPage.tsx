@@ -76,10 +76,10 @@ const Hero = styled("section", {
     minHeight: 0,
     overflow: "hidden",
     padding: "clamp(32px, 4vw, 62px)",
-    color: "#fff",
-    background:
-      "linear-gradient(145deg, #33294b 0%, #262038 62%, #211b31 100%)",
-    borderRadius: "clamp(28px, 3vw, 48px)",
+    color: "var(--md-sys-color-on-surface)",
+    background: "var(--md-sys-color-surface-container-lowest)",
+    border: "1px solid var(--md-sys-color-outline-variant)",
+    borderRadius: "var(--borderRadius-xl)",
 
     "@media (max-width: 980px)": {
       padding: "38px",
@@ -181,7 +181,7 @@ const AccountSwitch = styled("div", {
       height: "40px",
       color: "var(--md-sys-color-primary)",
       border: "1px solid var(--md-sys-color-outline-variant)",
-      borderRadius: "999px",
+      borderRadius: "var(--borderRadius-full)",
       fontWeight: 650,
       textDecoration: "none",
       transition: "background 150ms ease, border-color 150ms ease",

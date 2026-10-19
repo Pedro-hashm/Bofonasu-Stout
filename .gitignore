@@ -2,3 +2,12 @@
 **/dist/
 **/coverage/
 **/.env
+/tooling/pnpm-store/
+/tooling/pnpm-runtime/
+/tooling/electron-cache/
+/tooling/npm-cache/
+/tooling/node-gyp-cache/
+/tooling/desktop-dev-profile/
+/tooling/build-temp/
+/tooling/node-runtime/
+*.log

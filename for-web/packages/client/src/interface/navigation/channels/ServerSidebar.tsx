@@ -461,7 +461,7 @@ const CategorySection = styled("div", {
     flexDirection: "column",
     paddingBlock: "var(--gap-sm)",
     borderRadius: "var(--borderRadius-sm)",
-    background: "var(--md-sys-color-surface-container-low)",
+    background: "transparent",
 
     "&:first-child": {
       paddingTop: 0,
@@ -491,7 +491,9 @@ const CategoryBase = styled("div", {
     fill: "var(--color)",
 
     ...typography.raw({ class: "label", size: "small" }),
-    fontSize: "13px",
+    fontSize: "calc(10px * var(--ui-font-scale, 1))",
+    textTransform: "uppercase",
+    letterSpacing: "0.8px",
 
     "&:hover": {
       "--color": "var(--md-sys-color-on-surface-variant)",

@@ -6,7 +6,6 @@ import "./sentry";
 import { JSX, onMount } from "solid-js";
 import { render } from "solid-js/web";
 
-import { attachDevtoolsOverlay } from "@solid-devtools/overlay";
 import { Navigate, Route, Router, useParams } from "@solidjs/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 import "material-symbols";
@@ -49,9 +48,13 @@ import { Friends } from "./interface/Friends";
 import { HomePage } from "./interface/Home";
 import { ServerHome } from "./interface/ServerHome";
 import { ChannelPage } from "./interface/channels/ChannelPage";
+import { DesignPreviewPage } from "./interface/workspace/DesignPreviewPage";
 import "./serviceWorkerInterface";
 
-attachDevtoolsOverlay();
+if (import.meta.env.DEV && import.meta.env.VITE_DEVTOOLS === "true")
+  void import("@solid-devtools/overlay").then(({ attachDevtoolsOverlay }) =>
+    attachDevtoolsOverlay(),
+  );
 
 /**
  * Redirect PWA start to the last active path
@@ -199,6 +202,9 @@ if (!escapeSelfEmbed())
         <I18nProvider>
           <SnackbarProvider controller={snackbarCtrl}>
             <Router>
+              {import.meta.env.DEV && (
+                <Route path="/design" component={DesignPreviewPage} />
+              )}
               <Route path="/i/:host" component={InstanceContext}>
                 {routes()}
               </Route>

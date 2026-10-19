@@ -111,6 +111,6 @@ const RoleIcon = styled("div", {
     width: "16px",
     height: "16px",
     aspectRatio: "1/1",
-    borderRadius: "100%",
+    borderRadius: "var(--borderRadius-circle)",
   },
 });

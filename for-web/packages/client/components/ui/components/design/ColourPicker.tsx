@@ -197,7 +197,7 @@ const ColourSwatch = styled("button", {
     aspectRatio: "1 / 1",
     padding: 0,
     border: 0,
-    borderRadius: "50%",
+    borderRadius: "var(--borderRadius-circle)",
     cursor: "pointer",
     position: "relative",
     overflow: "hidden",
@@ -246,7 +246,7 @@ const ColourIndicator = styled("span", {
     width: "18px",
     height: "18px",
     flexShrink: 0,
-    borderRadius: "50%",
+    borderRadius: "var(--borderRadius-circle)",
     marginRight: "var(--gap-sm)",
   },
 });

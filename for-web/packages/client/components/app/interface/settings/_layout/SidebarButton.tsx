@@ -51,11 +51,11 @@ const SidebarButtonBase = styled("a", {
     minWidth: 0,
     display: "flex",
     alignItems: "center",
-    padding: "6px 8px",
-    borderRadius: "8px",
+    padding: "9px 12px",
+    borderRadius: "var(--borderRadius-xs)",
     fontWeight: 500,
     marginInlineEnd: "12px",
-    fontSize: "15px",
+    fontSize: "13px",
     userSelect: "none",
     transition: "background-color 0.1s ease-in-out",
     color: "var(--md-sys-color-on-surface)",
@@ -69,7 +69,9 @@ const SidebarButtonBase = styled("a", {
   variants: {
     "aria-selected": {
       true: {
-        background: "var(--md-sys-color-primary-container)",
+        background:
+          "color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent)",
+        color: "var(--md-sys-color-primary)",
       },
     },
   },

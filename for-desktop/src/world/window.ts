@@ -1,8 +1,26 @@
 import { contextBridge, ipcRenderer } from "electron";
 
+import type { UpdateBridge, UpdateState } from "../../../shared/updates";
 import { version } from "../../package.json";
 
+const updates: UpdateBridge = {
+  getState: () => ipcRenderer.invoke("bofonasu:updates:state"),
+  check: () => ipcRenderer.invoke("bofonasu:updates:check"),
+  install: () => ipcRenderer.invoke("bofonasu:updates:install"),
+  openDownload: () => ipcRenderer.invoke("bofonasu:updates:open"),
+  setInCall: (value) => ipcRenderer.send("bofonasu:updates:call", value),
+  subscribe(callback) {
+    const listener = (_event: Electron.IpcRendererEvent, state: UpdateState) =>
+      callback(state);
+    ipcRenderer.on("bofonasu:updates:changed", listener);
+    return () => {
+      ipcRenderer.removeListener("bofonasu:updates:changed", listener);
+    };
+  },
+};
+
 contextBridge.exposeInMainWorld("native", {
+  updates,
   versions: {
     node: () => process.versions.node,
     chrome: () => process.versions.chrome,

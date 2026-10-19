@@ -171,7 +171,7 @@ export function Draggable<T>(props: Props<T>) {
             : {
                 outline:
                   "2px solid color-mix(in srgb, 40% var(--md-sys-color-primary), transparent)",
-                borderRadius: "4px",
+                borderRadius: "var(--borderRadius-xs)",
                 outlineOffset: "-2px",
               }),
         },

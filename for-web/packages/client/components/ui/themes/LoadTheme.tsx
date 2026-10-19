@@ -50,6 +50,14 @@ export function LoadTheme() {
       ...createMaterialColourVariables(activeTheme, "--md-sys-color-"),
       // mount --mdui-color triplet variables
       ...createMduiColourTriplets(activeTheme, "--mdui-color-"),
+      ...Object.fromEntries(
+        ["navigation", "channels", "conversation", "members", "voice"].map(
+          (id) => [
+            `--widget-accent-${id}`,
+            activeTheme.widgetAccents[id] ?? activeTheme.accent,
+          ],
+        ),
+      ),
     };
   });
 
@@ -59,6 +67,12 @@ export function LoadTheme() {
     MONOSPACE_FONTS[state.theme.monospaceFont].load();
 
     const cssProps = getCssProps();
+    document.body.dataset.uiSkin = state.theme.activeTheme.skin;
+    document.body.dataset.uiMotion = state.theme.activeTheme.motion;
+    document.body.style.colorScheme = state.theme.activeTheme.darkMode
+      ? "dark"
+      : "light";
+    document.documentElement.style.fontSize = `${(16 * state.theme.activeTheme.fontScale) / 100}px`;
     for (const [key, value] of Object.entries(cssProps))
       document.body.style.setProperty(key, value);
   });

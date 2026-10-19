@@ -25,6 +25,7 @@ import { Experiments } from "./stores/Experiments";
 import { Keybinds } from "./stores/Keybinds";
 import { Layout } from "./stores/Layout";
 import { LinkSafety } from "./stores/LinkSafety";
+import { LivingRoom } from "./stores/LivingRoom";
 import { Locale } from "./stores/Locale";
 import { NotificationOptions } from "./stores/NotificationOptions";
 import { Ordering } from "./stores/Ordering";
@@ -100,6 +101,7 @@ export class State {
   theme = new Theme(this);
   voice = new Voice(this);
   sounds = new Sounds(this);
+  livingRoom = new LivingRoom(this);
 
   /**
    * Iterate over all available stores

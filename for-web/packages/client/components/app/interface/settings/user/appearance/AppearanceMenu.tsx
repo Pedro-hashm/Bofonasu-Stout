@@ -55,14 +55,13 @@ export function AppearanceMenu() {
 
   return (
     <Column gap="lg">
-      <MessagePreview>
-        <Text>
-          Welcome to the new appearance menu, custom themes are not available
-          just yet but we are looking for feedback on how to best implement
-          them!
-        </Text>
-      </MessagePreview>
-
+      <Column gap="sm">
+        <Text class="title">Stoat Studio</Text>
+        <Text>Presets, cores, formas, fontes e módulos em um só lugar.</Text>
+        <Button onPress={() => state.layout.setStudioOpen(true)}>
+          Abrir personalização
+        </Button>
+      </Column>
       <Column>
         <Text class="title" size="small">
           Colours

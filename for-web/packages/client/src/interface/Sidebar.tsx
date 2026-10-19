@@ -1,5 +1,12 @@
-import { Component, JSX, Match, Show, Switch, createMemo } from "solid-js";
-import { styled } from "styled-system/jsx";
+import {
+  Component,
+  JSX,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+} from "solid-js";
 
 import { Channel, Server as ServerI } from "stoat.js";
 
@@ -12,23 +19,9 @@ import { useClient, useUser } from "@revolt/client";
 import { useModals } from "@revolt/modal";
 import { useLocation, useParams, useSmartParams } from "@revolt/routing";
 import { useState } from "@revolt/state";
-import { LAYOUT_SECTIONS } from "@revolt/state/stores/Layout";
 
 import { HomeSidebar, ServerList, ServerSidebar } from "./navigation";
-
-const MainBar = styled("div", {
-  base: {
-    display: "flex",
-    flexShrink: 0,
-
-    _phone: {
-      "--layout-width-channel-sidebar": "auto",
-      position: "absolute",
-      width: "100vw",
-      height: "100%",
-    },
-  },
-});
+import { WorkspaceModule, useWorkspace } from "./workspace/Workspace";
 
 /**
  * Left-most channel navigation sidebar
@@ -46,42 +39,48 @@ export const Sidebar = (props: {
 
   const params = useParams<{ server: string }>();
   const location = useLocation();
+  const workspace = useWorkspace();
+  createEffect(() => {
+    const path = location.pathname;
+    workspace?.reveal(
+      path.includes("/server/") && !path.includes("/channel/")
+        ? "channels"
+        : "conversation",
+    );
+  });
 
   return (
-    <MainBar class="main_bar">
-      <ServerList
-        orderedServers={state.ordering.orderedServers(client())}
-        orderedEntries={state.ordering.orderedEntries(client())}
-        setServerOrder={state.ordering.setServerOrder}
-        unreadConversations={state.ordering
-          .orderedConversations(client())
-          .filter(
-            // TODO: muting channels
-            (channel) => channel.unread,
-          )}
-        user={user()!}
-        selectedServer={() => params.server}
-        onCreateOrJoinServer={() =>
-          openModal({
-            type: "create_or_join_server",
-            client: client(),
-          })
-        }
-        menuGenerator={props.menuGenerator}
-      />
-      <Show
-        when={
-          state.layout.getSectionState(LAYOUT_SECTIONS.PRIMARY_SIDEBAR, true) &&
-          !location.pathname.startsWith("/discover")
-        }
-      >
+    <>
+      <WorkspaceModule id="navigation">
+        <ServerList
+          orderedServers={state.ordering.orderedServers(client())}
+          orderedEntries={state.ordering.orderedEntries(client())}
+          setServerOrder={state.ordering.setServerOrder}
+          unreadConversations={state.ordering
+            .orderedConversations(client())
+            .filter(
+              // TODO: muting channels
+              (channel) => channel.unread,
+            )}
+          user={user()!}
+          selectedServer={() => params.server}
+          onCreateOrJoinServer={() =>
+            openModal({
+              type: "create_or_join_server",
+              client: client(),
+            })
+          }
+          menuGenerator={props.menuGenerator}
+        />
+      </WorkspaceModule>
+      <WorkspaceModule id="channels">
         <Switch fallback={<Home />}>
           <Match when={params.server}>
             <Server />
           </Match>
         </Switch>
-      </Show>
-    </MainBar>
+      </WorkspaceModule>
+    </>
   );
 };
 

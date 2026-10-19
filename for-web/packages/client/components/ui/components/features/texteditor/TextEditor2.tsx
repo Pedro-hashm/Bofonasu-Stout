@@ -76,7 +76,7 @@ export function TextEditor2(props: Props) {
 
   const { isMobile } = useDevice();
   const codeMirror = document.createElement("div");
-  codeMirror.className = editor;
+  codeMirror.className = `${editor} ws-message-editor`;
 
   //Custom CSS
   codeMirror.style.minWidth = "0";

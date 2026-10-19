@@ -180,7 +180,7 @@ const SelectTrigger = styled("button", {
     width: "100%",
     minHeight: "56px",
     padding: "8px 16px",
-    borderRadius: "4px 4px 0 0",
+    borderRadius: "var(--borderRadius-xs) var(--borderRadius-xs) 0 0",
     border: "none",
     borderBottom: "1px solid var(--md-sys-color-outline)",
     background: "var(--md-sys-color-surface-container-highest)",
@@ -188,7 +188,7 @@ const SelectTrigger = styled("button", {
     cursor: "pointer",
     position: "relative",
     textAlign: "left",
-    fontSize: "16px",
+    fontSize: "calc(16px * var(--ui-font-scale, 1))",
     fontFamily: "inherit",
     transition: "border-color 0.2s",
 
@@ -231,12 +231,12 @@ const SelectLabel = styled("label", {
     floating: {
       true: {
         top: "8px",
-        fontSize: "12px",
+        fontSize: "calc(12px * var(--ui-font-scale, 1))",
         transform: "translateY(0)",
       },
       false: {
         top: "50%",
-        fontSize: "16px",
+        fontSize: "calc(16px * var(--ui-font-scale, 1))",
         transform: "translateY(-50%)",
       },
     },
@@ -267,7 +267,7 @@ const DropdownMenu = styled("div", {
     maxHeight: "40vh",
     overflowY: "auto",
     scrollbarWidth: "none",
-    borderRadius: "4px",
+    borderRadius: "var(--borderRadius-xs)",
     background: "var(--md-sys-color-surface-container)",
     color: "var(--md-sys-color-on-surface)",
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",

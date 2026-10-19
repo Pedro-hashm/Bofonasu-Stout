@@ -12,6 +12,19 @@ import { State } from "..";
 import { AbstractStore } from ".";
 
 export type TypeTheme = {
+  /** Overall visual language applied to the generated color scheme. */
+  skin: "stoat" | "discord" | "studio";
+  motion: "full" | "reduced" | "off";
+  panelGap: number;
+  fontScale: number;
+  colors: Partial<
+    Record<
+      "background" | "panel" | "raised" | "text" | "muted" | "border",
+      string
+    >
+  >;
+  widgetBackgrounds: Record<string, string>;
+
   /**
    * Base theme preset
    */
@@ -73,11 +86,30 @@ export type TypeTheme = {
    * Spacing between message groups
    */
   messageGroupSpacing: number;
+
+  /** Global UI corner roundness from 0 (square) to 100 (default). */
+  cornerScale: number;
+
+  /** Global UI spacing from 0 (compact) to 100 (spacious). */
+  densityScale: number;
+
+  /** Optional per-widget accent colors. */
+  widgetAccents: Record<string, string>;
+
+  /** Optional corner and density overrides for functional blocks. */
+  widgetCorners: Record<string, number>;
+  widgetDensities: Record<string, number>;
 };
 
 export type SelectedTheme = Pick<
   TypeTheme,
   | "blur"
+  | "skin"
+  | "motion"
+  | "panelGap"
+  | "fontScale"
+  | "colors"
+  | "widgetBackgrounds"
   | "interfaceFont"
   | "monospaceFont"
   | "messageSize"
@@ -89,6 +121,11 @@ export type SelectedTheme = Pick<
   accent: string;
   contrast: number;
   variant: TypeTheme["m3Variant"];
+  cornerScale: number;
+  densityScale: number;
+  widgetAccents: Record<string, string>;
+  widgetCorners: Record<string, number>;
+  widgetDensities: Record<string, number>;
 };
 
 /**
@@ -132,9 +169,15 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
   default(): TypeTheme {
     return {
       preset: "you",
+      skin: "studio",
+      motion: "full",
+      panelGap: 6,
+      fontScale: 100,
+      colors: {},
+      widgetBackgrounds: {},
       mode: "system",
 
-      m3Accent: "#5470ec",
+      m3Accent: "#8cdbb5",
       m3Contrast: 0.0,
       m3Variant: "tonal_spot",
 
@@ -144,6 +187,11 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
       blur: true,
       messageSize: 14,
       messageGroupSpacing: 12,
+      cornerScale: 35,
+      densityScale: 50,
+      widgetAccents: {},
+      widgetCorners: {},
+      widgetDensities: {},
     };
   }
 
@@ -151,23 +199,54 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
    * Validate the given data to see if it is compliant and return a compliant object
    */
   clean(input: Partial<TypeTheme>): TypeTheme {
+    input = input && typeof input === "object" ? input : {};
     const data: TypeTheme = this.default();
 
     if (["light", "dark", "system"].includes(input.mode!)) {
       data.mode = input.mode!;
     }
 
-    if (["you", "neutral"].includes(input.preset!)) {
-      data.preset = input.preset!;
-    }
+    // Legacy "neutral" themes use the supported Material You pipeline too.
+    data.preset = "you";
 
-    if (typeof input.m3Contrast === "number") {
-      data.m3Contrast = input.m3Contrast;
+    if (["stoat", "discord", "studio"].includes(input.skin!))
+      data.skin = input.skin!;
+    if (["full", "reduced", "off"].includes(input.motion!))
+      data.motion = input.motion!;
+    for (const [key, min, max] of [
+      ["panelGap", 0, 16],
+      ["fontScale", 90, 120],
+    ] as const) {
+      const value = input[key];
+      if (typeof value === "number" && Number.isFinite(value))
+        data[key] = Math.min(max, Math.max(min, value));
+    }
+    for (const key of ["colors", "widgetBackgrounds"] as const) {
+      const values = input[key];
+      if (!values || typeof values !== "object") continue;
+      const allowed =
+        key === "colors"
+          ? ["background", "panel", "raised", "text", "muted", "border"]
+          : ["navigation", "channels", "conversation", "members", "voice"];
+      for (const [id, color] of Object.entries(values))
+        if (
+          allowed.includes(id) &&
+          typeof color === "string" &&
+          /^#[0-9a-fA-F]{6}$/.test(color)
+        )
+          (data[key] as Record<string, string>)[id] = color;
     }
 
     if (
-      input.m3Accent &&
-      input.m3Accent.match(/#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})/)
+      typeof input.m3Contrast === "number" &&
+      Number.isFinite(input.m3Contrast)
+    ) {
+      data.m3Contrast = Math.min(1, Math.max(-1, input.m3Contrast));
+    }
+
+    if (
+      typeof input.m3Accent === "string" &&
+      /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(input.m3Accent)
     ) {
       data.m3Accent = input.m3Accent;
     }
@@ -192,12 +271,78 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
       data.blur = input.blur;
     }
 
-    if (typeof input.messageSize === "number") {
-      data.messageSize = input.messageSize;
+    if (
+      typeof input.messageSize === "number" &&
+      Number.isFinite(input.messageSize)
+    ) {
+      data.messageSize = Math.min(24, Math.max(12, input.messageSize));
     }
 
     if (typeof input.messageGroupSpacing === "number") {
-      data.messageGroupSpacing = input.messageGroupSpacing;
+      data.messageGroupSpacing = Math.min(
+        32,
+        Math.max(0, input.messageGroupSpacing),
+      );
+    }
+
+    if (
+      typeof input.cornerScale === "number" &&
+      Number.isFinite(input.cornerScale)
+    ) {
+      data.cornerScale = Math.min(100, Math.max(0, input.cornerScale));
+    }
+
+    if (
+      typeof input.densityScale === "number" &&
+      Number.isFinite(input.densityScale)
+    ) {
+      data.densityScale = Math.min(100, Math.max(0, input.densityScale));
+    }
+
+    if (input.widgetAccents && typeof input.widgetAccents === "object") {
+      data.widgetAccents = Object.entries(input.widgetAccents).reduce(
+        (acc, [key, value]) => {
+          if (
+            [
+              "navigation",
+              "channels",
+              "conversation",
+              "members",
+              "voice",
+            ].includes(key) &&
+            typeof value === "string" &&
+            /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)
+          ) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+    }
+
+    for (const key of ["widgetCorners", "widgetDensities"] as const) {
+      const incoming = input[key];
+      if (!incoming || typeof incoming !== "object") continue;
+      data[key] = Object.entries(incoming).reduce(
+        (acc, [id, value]) => {
+          if (
+            [
+              "navigation",
+              "channels",
+              "conversation",
+              "members",
+              "voice",
+            ].includes(id) &&
+            typeof value === "number" &&
+            Number.isFinite(value)
+          ) {
+            acc[id] = Math.min(100, Math.max(0, value));
+          }
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
     }
 
     if (
@@ -232,6 +377,12 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
           messageSize: opts.messageSize,
           messageGroupSpacing: opts.messageGroupSpacing,
           preset: "you",
+          skin: opts.skin,
+          motion: opts.motion,
+          panelGap: opts.panelGap,
+          fontScale: opts.fontScale,
+          colors: opts.colors,
+          widgetBackgrounds: opts.widgetBackgrounds,
           darkMode:
             opts.mode === "dark" ||
             (opts.mode === "system" && this.prefersDark()),
@@ -239,6 +390,11 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
           accent: opts.m3Accent,
           contrast: opts.m3Contrast,
           variant: opts.m3Variant,
+          cornerScale: opts.cornerScale,
+          densityScale: opts.densityScale,
+          widgetAccents: opts.widgetAccents,
+          widgetCorners: opts.widgetCorners,
+          widgetDensities: opts.widgetDensities,
         };
     }
   }
@@ -271,6 +427,15 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
    */
   setPreset(preset: TypeTheme["preset"]) {
     this.set("preset", preset);
+  }
+
+  /** Apply a validated local appearance preset. */
+  applyPreset(preset: Partial<TypeTheme>) {
+    this.state.set(
+      this.getKey(),
+      this.global,
+      this.clean({ ...this.state.get(this.getKey()), ...preset }),
+    );
   }
 
   /**
@@ -379,6 +544,75 @@ export class Theme extends AbstractStore<"theme", TypeTheme> {
    */
   get messageGroupSpacing() {
     return this.get().messageGroupSpacing;
+  }
+
+  get cornerScale() {
+    return this.get().cornerScale;
+  }
+
+  get densityScale() {
+    return this.get().densityScale;
+  }
+
+  get widgetAccents() {
+    return this.get().widgetAccents;
+  }
+
+  get widgetCorners() {
+    return this.get().widgetCorners;
+  }
+
+  get widgetDensities() {
+    return this.get().widgetDensities;
+  }
+
+  setCornerScale(value: number) {
+    this.set("cornerScale", Math.min(100, Math.max(0, value)));
+  }
+
+  setDensityScale(value: number) {
+    this.set("densityScale", Math.min(100, Math.max(0, value)));
+  }
+
+  setWidgetAccent(id: string, value: string) {
+    if (
+      !["navigation", "channels", "conversation", "members", "voice"].includes(
+        id,
+      )
+    )
+      return;
+    const next = { ...this.get().widgetAccents };
+    if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)) next[id] = value;
+    else delete next[id];
+    this.set("widgetAccents", next);
+  }
+
+  setWidgetCorner(id: string, value: number) {
+    if (
+      !["navigation", "channels", "conversation", "members", "voice"].includes(
+        id,
+      ) ||
+      !Number.isFinite(value)
+    )
+      return;
+    const next = { ...this.get().widgetCorners };
+    if (value === this.cornerScale) delete next[id];
+    else next[id] = Math.min(100, Math.max(0, value));
+    this.set("widgetCorners", next);
+  }
+
+  setWidgetDensity(id: string, value: number) {
+    if (
+      !["navigation", "channels", "conversation", "members", "voice"].includes(
+        id,
+      ) ||
+      !Number.isFinite(value)
+    )
+      return;
+    const next = { ...this.get().widgetDensities };
+    if (value === this.densityScale) delete next[id];
+    else next[id] = Math.min(100, Math.max(0, value));
+    this.set("widgetDensities", next);
   }
 
   /**

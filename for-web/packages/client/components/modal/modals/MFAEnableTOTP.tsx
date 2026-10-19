@@ -23,7 +23,7 @@ const Code = styled("code", {
  */
 const Qr = styled("div", {
   base: {
-    borderRadius: "4px",
+    borderRadius: "var(--borderRadius-xs)",
     padding: "8px",
     background: "white",
     width: "156px",

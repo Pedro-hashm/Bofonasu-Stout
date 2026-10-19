@@ -505,7 +505,7 @@ msgstr "Estàs segur/a que vols fixar aquest missatge?"
 #. placeholder {1}: props.group.name
 #: components/modal/modals/RemoveMember.tsx
 msgid "Are you sure you want to remove {0} from {1}?"
-msgstr "Estàs segura/a que vols eliminar {0] de {1}?"
+msgstr "Estàs segura/a que vols eliminar {0} de {1}?"
 
 #: components/modal/modals/PinMessage.tsx
 msgid "Are you sure you want to unpin this message?"

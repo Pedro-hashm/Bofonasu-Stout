@@ -94,12 +94,13 @@ export function SettingsContent(props: {
  */
 const base = css({
   minWidth: 0,
+  minHeight: 0,
+  height: "100%",
   flex: "1 1 800px",
   flexDirection: "row",
   display: "flex",
   background: "var(--md-sys-color-surface-container-low)",
-  borderStartStartRadius: "30px",
-  borderEndStartRadius: "30px",
+  borderInlineStart: "1px solid var(--md-sys-color-outline-variant)",
 
   "& > a": {
     textDecoration: "none",
@@ -124,8 +125,8 @@ const InnerContent = styled("div", {
     minWidth: 0,
     width: "100%",
     display: "flex",
-    maxWidth: "740px",
-    padding: "80px 32px",
+    maxWidth: "820px",
+    padding: "48px 40px",
     justifyContent: "stretch",
     zIndex: 1,
 

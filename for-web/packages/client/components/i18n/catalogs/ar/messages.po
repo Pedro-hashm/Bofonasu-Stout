@@ -53,7 +53,7 @@ msgstr "{0, plural, one {# رسالة مرفوضة} other {# رسائل مرفو
 #. placeholder {0}: mentions()
 #: components/ui/components/features/navigation/UnreadCallout.tsx
 msgid "{0, plural, one {# new mention} other {# new mentions}}"
-msgstr "{0، الجمع، واحد {# ذكر جديد} وآخر {# ذكر جديد}}"
+msgstr "{0, plural, one {# ذكر جديد} other {# ذكر جديد}}"
 
 #. placeholder {0}: items().length
 #: components/ui/components/utils/files/FileDropAnywhereCollector.tsx

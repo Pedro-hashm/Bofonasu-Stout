@@ -35,7 +35,7 @@ export const FlowBase = styled("div", {
       width: "100%",
       height: "54px",
       marginTop: "6px",
-      borderRadius: "999px",
+      borderRadius: "var(--borderRadius-full)",
       fontSize: "0.95rem",
       fontWeight: 700,
     },
@@ -100,7 +100,8 @@ const Bubble = styled("div", {
     height: "50px",
     marginBottom: "24px",
     background: "var(--md-sys-color-secondary-container)",
-    borderRadius: "16px 16px 16px 5px",
+    borderRadius:
+      "var(--borderRadius-lg) var(--borderRadius-lg) var(--borderRadius-lg) var(--borderRadius-xs)",
     transition: "background 240ms ease",
     // rapid clicks on the bubble shouldn't select text around it
     userSelect: "none",
@@ -109,7 +110,7 @@ const Bubble = styled("div", {
       width: "6px",
       height: "6px",
       background: "var(--md-sys-color-on-secondary-container)",
-      borderRadius: "50%",
+      borderRadius: "var(--borderRadius-circle)",
       transition: "background 240ms ease",
       // looping motion for each mood is driven from FlowBubble
       animation:

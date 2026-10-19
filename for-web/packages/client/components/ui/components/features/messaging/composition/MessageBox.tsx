@@ -126,13 +126,13 @@ const Base = styled("div", {
 
 const Parent = styled("div", {
   base: {
-    flexGrow: 1,
-    flexShrink: 0,
+    // Only the history should consume spare vertical space in the chat column.
+    flex: "0 0 auto",
+    minWidth: 0,
 
     display: "flex",
     gap: "var(--gap-md)",
     margin: "0 0 var(--gap-md) 0",
-    maxHeight: "var(--layout-height-message-box)",
   },
 });
 
@@ -142,7 +142,7 @@ const Parent = styled("div", {
 const Blocked = styled(Row, {
   base: {
     flexGrow: 1,
-    fontSize: "14px",
+    fontSize: "calc(14px * var(--ui-font-scale, 1))",
     userSelect: "none",
     padding: "var(--gap-md)",
   },
@@ -204,7 +204,7 @@ const ActionContainer = styled("div", {
   base: {
     flexShrink: 0,
     display: "flex",
-    flexGrow: 1,
+    flexGrow: 0,
   },
   variants: {
     column: {
@@ -232,7 +232,7 @@ export function MessageBox(props: Props) {
   );
 
   return (
-    <Parent>
+    <Parent class="ws-message-composer">
       <Base hasActionsAppend={props.hasActionsAppend}>
         <Switch fallback={props.actionsStart}>
           <Match when={props.timeoutActive || !props.sendingAllowed}>
