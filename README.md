@@ -6,6 +6,41 @@ Cliente personalizado baseado nos projetos open source do Stoat.
 
 - `for-web/`: interface web em SolidJS; as alterações visuais e o visualizador de streams entram aqui.
 - `for-desktop/`: aplicativo desktop em Electron, que abre a interface web e gera os pacotes para PC.
+- `for-mobile/`: projetos Capacitor para Android e iOS, usando a mesma interface.
+
+## Releases compiladas no GitHub
+
+O workflow **Build and publish release** em `.github/workflows/release.yml` compila
+a interface uma vez e gera Windows, Android e iOS em paralelo nos servidores do
+GitHub. Nenhum SDK Android ou Xcode precisa ser instalado no PC para esse fluxo.
+
+1. Prepare uma versão com `node scripts/release.cjs prepare minor --title "Título" --change "Alteração"`.
+2. Envie o código para `main`.
+3. Em **Actions → Build and publish release → Run workflow**, informe a versão,
+   por exemplo `v1.8.0`. A tag é criada depois das builds aprovadas.
+
+Enviar uma tag `v*` também inicia o processo. O workflow confere o versionamento,
+compila e só publica a release depois que todas as plataformas terminarem.
+Reexecuções não sobrescrevem uma release já publicada. Builds intermediárias
+expiram em um ou dois dias; os downloads finais permanecem nas Releases.
+
+Arquivos gerados: instalador Windows, pacote do atualizador, ZIP portátil,
+APK Android assinado, IPA iOS sem assinatura e `SHA256SUMS.txt`.
+
+**Android:** a assinatura usa os secrets `ANDROID_KEYSTORE_BASE64`,
+`ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS` e `ANDROID_KEY_PASSWORD`.
+Preserve a mesma chave nas próximas versões. O backup desta configuração foi
+salvo em `tooling/android-signing/`, fora do Git.
+
+**iPhone/iPad:** o IPA é compilado para dispositivos reais, mas não instala
+diretamente pelo download. Exige assinatura/provisionamento Apple antes da
+instalação, mesmo para compartilhar com uma pessoa. Não exige uma conta Apple
+para o GitHub compilar esse arquivo sem assinatura. TestFlight não está configurado.
+
+Os clientes mobile são a primeira distribuição da interface compartilhada:
+requerem teste em aparelhos reais. Receber apresentações utiliza o player web;
+enviar a própria tela e manter chamadas em segundo plano exigem integrações
+nativas adicionais e não são oferecidos como recursos concluídos nesta versão.
 
 ## Backend oficial do Stoat
 

@@ -11,3 +11,11 @@
 /tooling/build-temp/
 /tooling/node-runtime/
 *.log
+/tooling/android-signing/
+/artifacts/
+/release-notes-ci.md
+*.p12
+*.mobileprovision
+*.ipa
+*.keystore
+*.jks

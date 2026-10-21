@@ -1,0 +1,13 @@
+{
+  "appId": "app.bofonasu.stout",
+  "appName": "Bofonasu Stout",
+  "webDir": "../for-web/packages/client/dist",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

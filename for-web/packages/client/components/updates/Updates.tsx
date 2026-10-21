@@ -1,3 +1,4 @@
+import { mobilePlatform } from "@revolt/common/lib/mobile";
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -151,7 +152,19 @@ export function Updates() {
     try {
       const bridge = window.native?.updates;
       if (bridge) await bridge.openDownload();
-      else window.open(releasesURL, "_blank", "noopener,noreferrer");
+      else {
+        const latest = updateState().releases.find(
+          (entry) =>
+            entry.version === updateState().latestVersion && entry.published,
+        );
+        const download =
+          mobilePlatform() === "android"
+            ? latest?.androidDownloadURL
+            : mobilePlatform() === "ios"
+              ? latest?.iosDownloadURL
+              : undefined;
+        window.open(download ?? releasesURL, "_blank", "noopener,noreferrer");
+      }
     } catch {
       setActionError(
         "Não foi possível abrir o download. Tente o link das releases abaixo.",
@@ -195,9 +208,13 @@ export function Updates() {
             ? "Novas versões são baixadas ao abrir e a cada 30 minutos. A atualização é aplicada ao reabrir, ou quando você escolher reiniciar abaixo."
             : updateState().mode === "development"
               ? "Modo de desenvolvimento. Você pode consultar o histórico e as releases publicadas."
-              : updateState().mode === "web"
-                ? "Esta é a versão web. O aplicativo desktop instalado também pode baixar atualizações automaticamente."
-                : "Esta instalação usa atualização manual. Baixe o instalador para habilitar as próximas atualizações automáticas."}
+              : updateState().mode === "mobile"
+                ? mobilePlatform() === "ios"
+                  ? "Cliente iOS. As próximas builds IPA aparecem aqui, mas exigem assinatura antes de instalar."
+                  : "Cliente Android. Baixe o APK da nova versão e instale por cima para preservar os dados."
+                : updateState().mode === "web"
+                  ? "Esta é a versão web. O aplicativo desktop instalado também pode baixar atualizações automaticamente."
+                  : "Esta instalação usa atualização manual. Baixe o instalador para habilitar as próximas atualizações automáticas."}
         </p>
         <div class="updates-actions">
           <Show
@@ -210,7 +227,12 @@ export function Updates() {
                   class="updates-button updates-button-primary"
                   onClick={() => void openDownload()}
                 >
-                  <ArrowDownToLine size={16} /> Baixar instalador
+                  <ArrowDownToLine size={16} />{" "}
+                  {mobilePlatform() === "android"
+                    ? "Baixar APK"
+                    : mobilePlatform() === "ios"
+                      ? "Baixar IPA sem assinatura"
+                      : "Baixar instalador"}
                 </button>
               </Show>
             }

@@ -14,6 +14,8 @@ export interface AppRelease {
   /** Present only for a stable public release with the expected Squirrel assets. */
   feedURL?: string;
   downloadURL?: string;
+  androidDownloadURL?: string;
+  iosDownloadURL?: string;
 }
 
 export interface UpdateState {
@@ -27,7 +29,7 @@ export interface UpdateState {
     | "ready"
     | "error"
     | "unpublished";
-  mode: "automatic" | "manual" | "development" | "web";
+  mode: "automatic" | "manual" | "development" | "web" | "mobile";
   latestVersion?: string;
   downloadedVersion?: string;
   checkedAt?: string;
@@ -143,6 +145,16 @@ export async function fetchPublicReleases(): Promise<AppRelease[]> {
       feedURL: hasUpdater ? downloadBase : undefined,
       downloadURL: assets.includes("Bofonasu-Stout-Setup.exe")
         ? `${downloadBase}Bofonasu-Stout-Setup.exe`
+        : undefined,
+      androidDownloadURL: assets.includes(
+        `Bofonasu-Stout-Android-${version}.apk`,
+      )
+        ? `${downloadBase}Bofonasu-Stout-Android-${version}.apk`
+        : undefined,
+      iosDownloadURL: assets.includes(
+        `Bofonasu-Stout-iOS-${version}-unsigned.ipa`,
+      )
+        ? `${downloadBase}Bofonasu-Stout-iOS-${version}-unsigned.ipa`
         : undefined,
     });
   }

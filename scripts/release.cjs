@@ -5,6 +5,7 @@ const crypto = require("node:crypto");
 const root = path.resolve(__dirname, "..");
 const catalogPath = path.join(root, "releases.json");
 const packagePath = path.join(root, "for-desktop/package.json");
+const mobilePath = path.join(root, "for-mobile/package.json");
 const read = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
 const write = (file, value) =>
   fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`);
@@ -36,6 +37,8 @@ function validate(catalog, pkg) {
     throw new Error(
       "A versão do desktop deve ser igual à primeira versão de releases.json.",
     );
+  if (fs.existsSync(mobilePath) && read(mobilePath).version !== pkg.version)
+    throw new Error("A versão mobile deve ser igual à versão do desktop.");
 }
 
 function writeChangelog(catalog) {
@@ -137,6 +140,18 @@ async function main() {
     }).format(new Date());
     catalog.versions.unshift({ version, date, title, changes });
     pkg.version = version;
+    if (fs.existsSync(mobilePath)) {
+      const mobile = read(mobilePath);
+      mobile.version = version;
+      write(mobilePath, mobile);
+      const lockPath = path.join(root, "for-mobile/package-lock.json");
+      if (fs.existsSync(lockPath)) {
+        const lock = read(lockPath);
+        lock.version = version;
+        lock.packages[""].version = version;
+        write(lockPath, lock);
+      }
+    }
     validate(catalog, pkg);
     write(catalogPath, catalog);
     write(packagePath, pkg);

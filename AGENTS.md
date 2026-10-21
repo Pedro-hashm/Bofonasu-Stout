@@ -6,3 +6,5 @@
 - Gere `CHANGELOG.md` com `node scripts/release.cjs write` depois de editar o catálogo. Preserve o histórico das versões anteriores e não afirme validações que não foram feitas.
 - O catálogo é incluído na interface para consulta offline; releases estáveis do próprio repositório complementam esse histórico em execução.
 - O build para distribuição é `for-desktop/scripts/build-windows.cjs`. Ele valida a versão e gera um manifesto dos artefatos. A publicação usa `scripts/publish-release.cjs` após o envio da tag correspondente.
+- Prefira o workflow `.github/workflows/release.yml` para compilar e publicar Windows, Android e iOS no GitHub. Ele compartilha a compilação web e só publica após todas as plataformas concluírem.
+- O versionamento mobile acompanha `releases.json` e o desktop. Preserve a chave Android dos secrets; não gere uma nova para atualizações. O IPA sem assinatura deve continuar identificado como tal e nunca ser descrito como instalação direta no iPhone.

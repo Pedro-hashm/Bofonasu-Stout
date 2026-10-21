@@ -102,13 +102,18 @@ export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
       </CallControlButton>
       <CallControlButton
         label={
-          !limits().video
-            ? t`Coming soon! 👀`
-            : voice.screenshare()
-              ? t`Stop sharing`
-              : t`Share screen`
+          typeof navigator.mediaDevices?.getDisplayMedia !== "function"
+            ? "Compartilhamento de tela indisponível neste dispositivo"
+            : !limits().video
+              ? t`Coming soon! 👀`
+              : voice.screenshare()
+                ? t`Stop sharing`
+                : t`Share screen`
         }
-        disabled={!limits().video}
+        disabled={
+          !limits().video ||
+          typeof navigator.mediaDevices?.getDisplayMedia !== "function"
+        }
         pressed={voice.screenshare()}
         tone={limits().video && voice.screenshare() ? "active" : undefined}
         onClick={() => {

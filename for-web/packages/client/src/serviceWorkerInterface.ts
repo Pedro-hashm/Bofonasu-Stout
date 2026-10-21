@@ -1,3 +1,4 @@
+import { isMobileApp } from "@revolt/common/lib/mobile";
 import { createSignal } from "solid-js";
 
 import { registerSW } from "virtual:pwa-register";
@@ -6,7 +7,7 @@ const [pendingUpdate, setPendingUpdate] = createSignal<() => void>();
 
 export { pendingUpdate };
 
-if (import.meta.env.PROD) {
+if (import.meta.env.PROD && !isMobileApp()) {
   const updateSW = registerSW({
     onNeedRefresh() {
       setPendingUpdate(() => void updateSW(true));

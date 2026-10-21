@@ -60,7 +60,7 @@ async function main() {
   const runtime = await require("./build-runtime.cjs")();
   if (runtime !== process.execPath) {
     await new Promise((resolve, reject) => {
-      const child = spawn(runtime, [__filename], {
+      const child = spawn(runtime, [__filename, ...process.argv.slice(2)], {
         cwd: desktop,
         env,
         stdio: "inherit",
@@ -85,16 +85,18 @@ async function main() {
     desktop,
   );
 
-  await bin(path.join(web, "packages/stoat.js"), "typescript", "tsc");
-  await bin(
-    path.join(web, "packages/solid-livekit-components"),
-    "tsup",
-    "tsup",
+  if (!process.argv.includes("--prebuilt-web"))
+    await run(path.resolve(desktop, "../scripts/build-web.cjs"), [], desktop);
+  const stamp = JSON.parse(
+    fs.readFileSync(path.join(client, "dist/bofonasu-build.json"), "utf8"),
   );
-  await bin(client, "@lingui/cli", "lingui", ["compile", "--typescript"]);
-  await bin(client, "@pandacss/dev", "panda", ["codegen"]);
-  await run(path.join(client, "scripts/copyAssets.mjs"), [], client);
-  await bin(client, "vite", "vite", ["build"]);
+  const catalog = fs.readFileSync(path.resolve(desktop, "../releases.json"));
+  const digest = require("node:crypto")
+    .createHash("sha256")
+    .update(JSON.stringify(JSON.parse(catalog)))
+    .digest("hex");
+  if (stamp.catalogHash !== digest)
+    throw new Error("A interface pré-compilada não corresponde a esta versão.");
 
   await bin(desktop, "@electron-forge/cli", "electron-forge", [
     "make",

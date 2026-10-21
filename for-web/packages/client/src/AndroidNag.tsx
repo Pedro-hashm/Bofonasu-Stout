@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/solid/macro";
 import { PLAY_STORE_URL } from "@revolt/common/lib/links";
+import { isMobileApp } from "@revolt/common/lib/mobile";
 import { useState } from "@revolt/state";
 import { Button, Text } from "@revolt/ui";
 import { Show, createSignal } from "solid-js";
@@ -40,6 +41,7 @@ export function AndroidNag() {
     state.layout.getSectionState(ANDROID_NAG_DISMISS_KEY, false);
 
   const show = () =>
+    !isMobileApp() &&
     isAndroid() &&
     isEligibleOrigin() &&
     !dismissedThisSession() &&

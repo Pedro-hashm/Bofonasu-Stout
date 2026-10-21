@@ -1,3 +1,4 @@
+import { isMobileApp } from "@revolt/common/lib/mobile";
 import { useVoice } from "@revolt/rtc";
 import { createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
 import {
@@ -15,7 +16,7 @@ export { bundledVersion, compareVersions, releasesURL };
 const initial: UpdateState = {
   currentVersion: window.native?.versions.desktop() ?? bundledVersion,
   status: "idle",
-  mode: window.native ? "manual" : "web",
+  mode: window.native ? "manual" : isMobileApp() ? "mobile" : "web",
   inCall: false,
   releases: bundledReleases,
 };

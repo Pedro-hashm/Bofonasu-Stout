@@ -2,6 +2,15 @@
 
 Histórico das builds. As versões publicadas podem ser consultadas no GitHub Releases.
 
+## 1.8.0 — 2026-10-21
+
+### Android, iOS e builds automáticas
+
+- Clientes mobile com a interface compartilhada: APK Android assinado e IPA iOS sem assinatura, destinado a assinatura e provisionamento antes de instalar.
+- GitHub Actions compila a interface uma vez e gera Windows, Android e iOS em paralelo, publicando a release completa com checksums.
+- Versão e histórico compartilhados entre desktop e mobile, com acesso ao APK ou IPA correto nas configurações.
+- Permissões de câmera e microfone nos projetos mobile; captura de tela não suportada pelo WebView deixa de ser oferecida como se estivesse disponível.
+
 ## 1.7.0 — 2026-10-18
 
 ### Acesso rápido aos servidores
