@@ -2,9 +2,9 @@
 
 Histórico das builds. As versões publicadas podem ser consultadas no GitHub Releases.
 
-## Em desenvolvimento — ainda não publicado
+## 1.10.0 — 2026-10-22
 
-### Melhorias de chat, chamada e efeitos sonoros
+### Chat expansível, chamada compacta e novos sons
 
 - Removido o som genérico de clicar em botões, menus e navegação.
 - Novos MP3 locais para entrar e sair da chamada, mutar e reativar, iniciar e encerrar apresentações e entrada e saída de espectadores.

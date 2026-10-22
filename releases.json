@@ -1,19 +1,21 @@
 {
   "schemaVersion": 1,
   "repository": "Pedro-hashm/Bofonasu-Stout",
-  "unreleased": {
-    "title": "Melhorias de chat, chamada e efeitos sonoros",
-    "changes": [
-      "Removido o som genérico de clicar em botões, menus e navegação.",
-      "Novos MP3 locais para entrar e sair da chamada, mutar e reativar, iniciar e encerrar apresentações e entrada e saída de espectadores.",
-      "Microfone e fone usam os mesmos efeitos de mute/unmute, reproduzidos apenas para quem acionou.",
-      "Avisos de espectadores sincronizados entre os clientes da chamada, sem repetir ao trocar entre Living Room, chamada normal e tela cheia.",
-      "Botão para expandir e restaurar o chat na área conjunta de conversa e chamada, preservando o layout salvo e o áudio da chamada.",
-      "Painel compacto de chamada para módulos pequenos, com status, avatares com indicador de fala, contador de participantes, apresentações e controles organizados.",
-      "Botão de efeitos sonoros abre o popup com quatro efeitos recentes e acesso ao painel completo, sem ocupar espaço no layout."
-    ]
-  },
   "versions": [
+    {
+      "version": "1.10.0",
+      "date": "2026-10-22",
+      "title": "Chat expansível, chamada compacta e novos sons",
+      "changes": [
+        "Removido o som genérico de clicar em botões, menus e navegação.",
+        "Novos MP3 locais para entrar e sair da chamada, mutar e reativar, iniciar e encerrar apresentações e entrada e saída de espectadores.",
+        "Microfone e fone usam os mesmos efeitos de mute/unmute, reproduzidos apenas para quem acionou.",
+        "Avisos de espectadores sincronizados entre os clientes da chamada, sem repetir ao trocar entre Living Room, chamada normal e tela cheia.",
+        "Botão para expandir e restaurar o chat na área conjunta de conversa e chamada, preservando o layout salvo e o áudio da chamada.",
+        "Painel compacto de chamada para módulos pequenos, com status, avatares com indicador de fala, contador de participantes, apresentações e controles organizados.",
+        "Botão de efeitos sonoros abre o popup com quatro efeitos recentes e acesso ao painel completo, sem ocupar espaço no layout."
+      ]
+    },
     {
       "version": "1.9.0",
       "date": "2026-10-21",
