@@ -1,3 +1,4 @@
+import { isMobileApp } from "@revolt/common/lib/mobile";
 import { useState } from "@revolt/state";
 import {
   type LayoutWidgetId,
@@ -9,6 +10,7 @@ import {
 import { createShapeDensityVariables } from "@revolt/ui/themes/stoatWebTheme";
 import { hasAppUpdate, UpdateDot } from "@revolt/updates";
 import {
+  ArrowLeft,
   ArrowLeftRight,
   Blocks,
   Check,
@@ -41,6 +43,7 @@ import { createStore } from "solid-js/store";
 import { Portal } from "solid-js/web";
 import { AppearanceStudio } from "./AppearanceStudio";
 import "./workspace.css";
+import "./workspace.mobile.css";
 
 import {
   type WorkspaceContextValue,
@@ -97,7 +100,9 @@ export function Workspace(props: {
   >({});
   const [active, setActive] = createSignal<LayoutWidgetId>("conversation");
   const [selected, setSelected] = createSignal<LayoutWidgetId>("conversation");
-  const [narrow, setNarrow] = createSignal(false);
+  const [narrow, setNarrow] = createSignal(
+    isMobileApp() || window.matchMedia("(max-width: 899px)").matches,
+  );
   const [dragging, setDragging] = createSignal(false);
   const [notice, setNotice] = createSignal("");
   const [trayOpen, setTrayOpen] = createSignal(false);
@@ -121,6 +126,9 @@ export function Workspace(props: {
   let stopGesture: (() => void) | undefined;
   onCleanup(() => stopGesture?.());
   createEffect(() => {
+    if (narrow() && state.layout.editMode) state.layout.cancelEdit();
+  });
+  createEffect(() => {
     JSON.stringify({
       widgets: state.layout.widgets,
       active: active(),
@@ -133,7 +141,7 @@ export function Workspace(props: {
     );
   });
   const reveal = (id: LayoutWidgetId) => {
-    state.layout.setWidgetVisible(id, true);
+    if (!narrow()) state.layout.setWidgetVisible(id, true);
     setActive(id);
     requestAnimationFrame(() =>
       slots[id]?.closest<HTMLElement>(".ws-panel")?.focus(),
@@ -159,7 +167,7 @@ export function Workspace(props: {
   onMount(() => {
     const observer = new ResizeObserver(() => {
       const bounds = root.getBoundingClientRect();
-      setNarrow(bounds.width < 900);
+      setNarrow(isMobileApp() || bounds.width < 900);
       const stage = canvas.getBoundingClientRect();
       setCanvasBounds({
         left: stage.left,
@@ -187,6 +195,7 @@ export function Workspace(props: {
       if (
         (e.ctrlKey || e.metaKey) &&
         e.shiftKey &&
+        !narrow() &&
         e.key.toLowerCase() === "e"
       ) {
         e.preventDefault();
@@ -278,7 +287,7 @@ export function Workspace(props: {
         theme.widgetBackgrounds[id] ??
         (id === "conversation" ? "var(--ws-panel)" : "var(--ws-sidebar)"),
       "z-index":
-        id === "navigation" && !state.layout.editMode && !narrow()
+        id === "navigation" && !state.layout.editMode
           ? 40
           : expanded() && id === "voice"
             ? 30
@@ -293,8 +302,13 @@ export function Workspace(props: {
             position: "fixed",
             left: `${bounds.left + (navigationFrame.x / GRID.columns) * bounds.width}px`,
             top: `${bounds.top + (navigationFrame.y / GRID.rows) * bounds.height}px`,
-            width: `calc(${(navigationFrame.w / GRID.columns) * bounds.width}px - var(--ws-gap))`,
-            height: `calc(${(navigationFrame.h / GRID.rows) * bounds.height}px - var(--ws-gap))`,
+            width: narrow()
+              ? `${bounds.width}px`
+              : `calc(${(navigationFrame.w / GRID.columns) * bounds.width}px - var(--ws-gap))`,
+            height: narrow()
+              ? `${bounds.height}px`
+              : `calc(${(navigationFrame.h / GRID.rows) * bounds.height}px - var(--ws-gap))`,
+            margin: narrow() ? "0" : "calc(var(--ws-gap) / 2)",
           }
         : {}),
     };
@@ -308,6 +322,60 @@ export function Workspace(props: {
         data-narrow={narrow()}
         data-dragging={dragging()}
       >
+        <Show when={narrow()}>
+          <header class="ws-mobile-header">
+            <button
+              class="ws-icon-button"
+              aria-label={
+                active() === "navigation" || active() === "members"
+                  ? "Voltar ao chat"
+                  : "Trocar servidor"
+              }
+              onClick={() =>
+                reveal(
+                  active() === "navigation" || active() === "members"
+                    ? "conversation"
+                    : "navigation",
+                )
+              }
+            >
+              <Show
+                when={active() === "navigation" || active() === "members"}
+                fallback={<Blocks size={21} />}
+              >
+                <ArrowLeft size={21} />
+              </Show>
+            </button>
+            <div>
+              <span>BOFONASU STOUT</span>
+              <strong>
+                {
+                  {
+                    navigation: "Seus servidores",
+                    channels: "Canais e conversas",
+                    conversation: "Chat",
+                    members: "Pessoas",
+                    voice: "Chamada",
+                  }[active()]
+                }
+              </strong>
+            </div>
+            <Show when={active() === "conversation"}>
+              <button
+                class="ws-icon-button"
+                aria-label="Ver pessoas"
+                onClick={() => reveal("members")}
+              >
+                <Users size={21} />
+              </button>
+            </Show>
+            <Show when={props.disconnected}>
+              <span class="ws-mobile-connection" role="status">
+                Reconectando
+              </span>
+            </Show>
+          </header>
+        </Show>
         <Portal mount={document.getElementById("floating") ?? document.body}>
           <Show when={!narrow() && !state.layout.editMode}>
             <button
@@ -344,94 +412,98 @@ export function Workspace(props: {
               </Show>
             </button>
           </Show>
-          <div
-            class="ws-tools"
-            style={toolsPosition()}
-            data-open={trayOpen()}
-            onPointerEnter={() => setTrayOpen(true)}
-            onPointerLeave={() => setTrayOpen(false)}
-            onFocusIn={() => setTrayOpen(true)}
-            onFocusOut={(event) => {
-              if (
-                !event.currentTarget.contains(
-                  event.relatedTarget as Node | null,
-                )
-              )
-                setTrayOpen(false);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                setTrayOpen(false);
-                (event.target as HTMLElement).blur();
-              }
-            }}
-          >
-            <button
-              class="ws-tools-handle"
-              aria-label="Opções do workspace"
-              aria-expanded={trayOpen()}
-              aria-controls="workspace-tools"
-              onClick={() => setTrayOpen(true)}
-            >
-              <Settings2 size={14} />
-            </button>
+          <Show when={!narrow()}>
             <div
-              class="ws-tools-tray"
-              id="workspace-tools"
-              aria-label="Opções do workspace"
-              inert={!trayOpen()}
+              class="ws-tools"
+              style={toolsPosition()}
+              data-open={trayOpen()}
+              onPointerEnter={() => setTrayOpen(true)}
+              onPointerLeave={() => setTrayOpen(false)}
+              onFocusIn={() => setTrayOpen(true)}
+              onFocusOut={(event) => {
+                if (
+                  !event.currentTarget.contains(
+                    event.relatedTarget as Node | null,
+                  )
+                )
+                  setTrayOpen(false);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setTrayOpen(false);
+                  (event.target as HTMLElement).blur();
+                }
+              }}
             >
-              <Show when={props.disconnected}>
-                <span class="ws-tools-status" role="status">
-                  Reconectando…
-                </span>
-              </Show>
-              <Show when={!narrow()}>
-                <button
-                  class="ws-icon-button"
-                  title="Trocar posições de conversa e chamada"
-                  aria-label="Trocar posições de conversa e chamada"
-                  onClick={() => state.layout.swapConversationVoice()}
-                >
-                  <ArrowLeftRight size={17} />
-                </button>
-              </Show>
-              <Show when={props.onSettings}>
-                <button
-                  class="ws-icon-button"
-                  title={
-                    hasAppUpdate()
-                      ? "Configurações · atualização disponível"
-                      : "Configurações da conta"
-                  }
-                  aria-label={
-                    hasAppUpdate()
-                      ? "Configurações · atualização disponível"
-                      : "Configurações da conta"
-                  }
-                  onClick={() => props.onSettings?.()}
-                >
-                  <Settings2 size={17} />
-                  <UpdateDot />
-                </button>
-              </Show>
               <button
-                class="ws-button ws-button--quiet"
-                onClick={() => state.layout.setEditMode(!state.layout.editMode)}
-                title="Ctrl+Shift+E"
+                class="ws-tools-handle"
+                aria-label="Opções do workspace"
+                aria-expanded={trayOpen()}
+                aria-controls="workspace-tools"
+                onClick={() => setTrayOpen(true)}
               >
-                <LayoutDashboard size={16} />
-                <span>Layout</span>
+                <Settings2 size={14} />
               </button>
-              <button
-                class="ws-button ws-button--accent"
-                onClick={() => state.layout.setStudioOpen(true)}
+              <div
+                class="ws-tools-tray"
+                id="workspace-tools"
+                aria-label="Opções do workspace"
+                inert={!trayOpen()}
               >
-                <Settings2 size={15} />
-                <span>Personalizar</span>
-              </button>
+                <Show when={props.disconnected}>
+                  <span class="ws-tools-status" role="status">
+                    Reconectando…
+                  </span>
+                </Show>
+                <Show when={!narrow()}>
+                  <button
+                    class="ws-icon-button"
+                    title="Trocar posições de conversa e chamada"
+                    aria-label="Trocar posições de conversa e chamada"
+                    onClick={() => state.layout.swapConversationVoice()}
+                  >
+                    <ArrowLeftRight size={17} />
+                  </button>
+                </Show>
+                <Show when={props.onSettings}>
+                  <button
+                    class="ws-icon-button"
+                    title={
+                      hasAppUpdate()
+                        ? "Configurações · atualização disponível"
+                        : "Configurações da conta"
+                    }
+                    aria-label={
+                      hasAppUpdate()
+                        ? "Configurações · atualização disponível"
+                        : "Configurações da conta"
+                    }
+                    onClick={() => props.onSettings?.()}
+                  >
+                    <Settings2 size={17} />
+                    <UpdateDot />
+                  </button>
+                </Show>
+                <button
+                  class="ws-button ws-button--quiet"
+                  onClick={() =>
+                    state.layout.setEditMode(!state.layout.editMode)
+                  }
+                  title="Ctrl+Shift+E"
+                >
+                  <LayoutDashboard size={16} />
+                  <span>Layout</span>
+                </button>
+                <button
+                  class="ws-button ws-button--accent"
+                  onClick={() => state.layout.setStudioOpen(true)}
+                >
+                  <Settings2 size={15} />
+                  <span>Personalizar</span>
+                </button>
+              </div>
             </div>
-          </div>
+          </Show>
         </Portal>
         <Show when={state.layout.editMode}>
           <div class="ws-editbar">
@@ -634,7 +706,7 @@ export function Workspace(props: {
         </div>
         <Show when={narrow()}>
           <nav class="ws-mobile-tabs" aria-label="Regiões do workspace">
-            <For each={LAYOUT_WIDGETS}>
+            <For each={["channels", "conversation", "voice"] as const}>
               {(id) => {
                 const Icon = ICONS[id];
                 return (
@@ -645,11 +717,27 @@ export function Workspace(props: {
                     onClick={() => reveal(id)}
                   >
                     <Icon size={19} />
-                    <span>{MODULES[id].label}</span>
+                    <span>
+                      {
+                        {
+                          channels: "Canais",
+                          conversation: "Chat",
+                          voice: "Chamada",
+                        }[id]
+                      }
+                    </span>
                   </button>
                 );
               }}
             </For>
+            <button
+              aria-label="Configurações"
+              onClick={() => props.onSettings?.()}
+            >
+              <Settings2 size={21} />
+              <span>Ajustes</span>
+              <UpdateDot />
+            </button>
           </nav>
         </Show>
         <span class="ws-sr-only" aria-live="polite">

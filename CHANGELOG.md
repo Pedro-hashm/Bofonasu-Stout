@@ -2,6 +2,16 @@
 
 Histórico das builds. As versões publicadas podem ser consultadas no GitHub Releases.
 
+## 1.9.0 — 2026-10-21
+
+### Interface mobile com navegação própria
+
+- Navegação mobile em telas dedicadas, com Canais, Chat, Chamada e Ajustes na barra inferior e troca de servidor pelo cabeçalho.
+- Configurações mobile em lista e detalhe, com voltar, fechar, rolagem e áreas de toque ampliadas.
+- Personalização acessível por Aparência nas configurações, sem editor de módulos no celular; presets mobile preservam a geometria do desktop.
+- Lista mobile de servidores com nomes, atalhos de conversas e indicadores de mensagens não lidas.
+- Chamada mantém o áudio ao navegar entre telas, sem uma janela flutuante cobrindo o chat no mobile.
+
 ## 1.8.0 — 2026-10-21
 
 ### Android, iOS e builds automáticas

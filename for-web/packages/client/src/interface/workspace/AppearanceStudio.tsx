@@ -1,4 +1,5 @@
 import { Dialog } from "@kobalte/core/dialog";
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import { useState } from "@revolt/state";
 import { APPEARANCE_PRESETS } from "@revolt/state/stores/appearancePresets";
 import {
@@ -25,7 +26,7 @@ import {
   Type,
   X,
 } from "lucide-solid";
-import { createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import { ThemePreview } from "./ThemePreview";
 
 const COLOR_LABELS = {
@@ -39,8 +40,12 @@ const COLOR_LABELS = {
 
 /** One appearance editor used by the workspace, settings and the development preview. */
 export function AppearanceStudio() {
+  const mobile = useMobileLayout();
   const state = useState();
   const [tab, setTab] = createSignal("presets");
+  createEffect(() => {
+    if (mobile() && tab() === "modules") setTab("design");
+  });
   const [name, setName] = createSignal("");
   const [feedback, setFeedback] = createSignal("");
   const [error, setError] = createSignal("");
@@ -87,7 +92,7 @@ export function AppearanceStudio() {
     if (!selected) return;
     try {
       if (selected.size > 100_000) throw new Error("O arquivo excede 100 KB.");
-      state.layout.importAppearance(await selected.text());
+      state.layout.importAppearance(await selected.text(), mobile());
       setFeedback("Tema importado e salvo como preset.");
       setError("");
     } catch (e) {
@@ -116,6 +121,7 @@ export function AppearanceStudio() {
         <Dialog.Overlay class="studio-overlay" />
         <Dialog.Content
           class="appearance-studio"
+          data-mobile={mobile()}
           ref={(el) => animateEntrance(el, theme().motion === "full")}
         >
           <header class="studio-header">
@@ -143,7 +149,9 @@ export function AppearanceStudio() {
                   [
                     ["presets", "Presets", Palette],
                     ["design", "Sistema visual", SlidersHorizontal],
-                    ["modules", "Módulos", LayoutDashboard],
+                    ...(!mobile()
+                      ? [["modules", "Módulos", LayoutDashboard] as const]
+                      : []),
                   ] as const
                 }
               >
@@ -187,7 +195,8 @@ export function AppearanceStudio() {
                             ...state.theme.default(),
                             ...preset.theme,
                           });
-                          state.layout.resetWidgets(preset.layout);
+                          if (!mobile())
+                            state.layout.resetWidgets(preset.layout);
                           setFeedback(
                             `${preset.name} aplicado. Ajuste como quiser.`,
                           );
@@ -233,7 +242,11 @@ export function AppearanceStudio() {
                 </div>
                 <div class="studio-section-title">
                   <h3>Seus presets</h3>
-                  <p>Aparência e posição dos módulos, salvas juntas.</p>
+                  <p>
+                    {mobile()
+                      ? "Cores, fontes e formas salvas neste dispositivo."
+                      : "Aparência e posição dos módulos, salvas juntas."}
+                  </p>
                 </div>
                 <form
                   class="studio-save"
@@ -269,7 +282,10 @@ export function AppearanceStudio() {
                         <div>
                           <button
                             onClick={() => {
-                              state.layout.applySavedPreset(preset.id);
+                              state.layout.applySavedPreset(
+                                preset.id,
+                                mobile(),
+                              );
                               setFeedback(`${preset.name} restaurado.`);
                             }}
                           >
@@ -393,14 +409,16 @@ export function AppearanceStudio() {
                   () => state.theme.densityScale,
                   (value) => state.theme.setDensityScale(value),
                 )}
-                {range(
-                  "Separação dos módulos",
-                  () => theme().panelGap,
-                  (value) => state.theme.applyPreset({ panelGap: value }),
-                  0,
-                  16,
-                  " px",
-                )}
+                <Show when={!mobile()}>
+                  {range(
+                    "Separação dos módulos",
+                    () => theme().panelGap,
+                    (value) => state.theme.applyPreset({ panelGap: value }),
+                    0,
+                    16,
+                    " px",
+                  )}
+                </Show>
                 <div class="studio-section-title">
                   <h3>
                     <Type size={16} />

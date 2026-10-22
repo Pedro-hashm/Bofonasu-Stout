@@ -5,6 +5,7 @@ import { css } from "styled-system/css";
 import { styled } from "styled-system/jsx";
 
 import { useUser } from "@revolt/client";
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import {
   UNICODE_EMOJI_PACKS,
   UnicodeEmoji,
@@ -41,6 +42,7 @@ import MDPalette from "@material-design-icons/svg/outlined/palette.svg?component
 export function AppearanceMenu() {
   const user = useUser();
   const state = useState();
+  const mobile = useMobileLayout();
   const { t } = useLingui();
   const [pickerRef, setPickerRef] = createSignal<HTMLDivElement>();
 
@@ -57,7 +59,11 @@ export function AppearanceMenu() {
     <Column gap="lg">
       <Column gap="sm">
         <Text class="title">Stoat Studio</Text>
-        <Text>Presets, cores, formas, fontes e módulos em um só lugar.</Text>
+        <Text>
+          {mobile()
+            ? "Personalize cores, fontes e formas. Salve seus temas favoritos."
+            : "Presets, cores, formas, fontes e módulos em um só lugar."}
+        </Text>
         <Button onPress={() => state.layout.setStudioOpen(true)}>
           Abrir personalização
         </Button>

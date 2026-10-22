@@ -1,5 +1,7 @@
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import { useState } from "@revolt/state";
 import { animateEntrance } from "@revolt/ui/lib/motion";
+import { ArrowLeft, X } from "lucide-solid";
 import {
   type JSX,
   Accessor,
@@ -48,6 +50,12 @@ const SettingsNavigationContext = createContext<{
  */
 export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
   const state = useState();
+  const mobile = useMobileLayout();
+  const [mobileDetail, setMobileDetail] = createSignal(
+    // Initial route determines whether settings open on the list or a detail page.
+    // eslint-disable-next-line solid/reactivity
+    !!(props.context as { page?: string } | undefined)?.page,
+  );
   const [page, setPage] = createSignal<undefined | string>(
     // eslint-disable-next-line
     (props.context as any)?.page,
@@ -87,6 +95,7 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
     if (!id) return;
 
     setPage(id);
+    setMobileDetail(true);
   }
 
   return (
@@ -103,35 +112,66 @@ export function Settings(props: SettingsProps & SettingsConfiguration<never>) {
         onClose={props.onClose}
       >
         {(list) => (
-          <>
-            <SettingsSidebar list={list} page={page} setPage={setPage} />
-            <SettingsContent
-              ref={props.contentRef}
-              action={action}
-              page={page}
-              list={list}
-              title={props.title}
-              onClose={props.onClose}
-            >
-              <Show when={page()} keyed>
-                {(currentPage) => (
-                  <div
-                    ref={(el) =>
-                      animateEntrance(
-                        el,
-                        state.theme.activeTheme.motion === "full",
-                      )
-                    }
+          <div
+            class="settings-shell"
+            data-mobile={mobile()}
+            data-detail={mobileDetail()}
+          >
+            <Show when={mobile()}>
+              <header class="mobile-settings-header">
+                <Show when={mobileDetail()}>
+                  <button
+                    aria-label="Voltar às configurações"
+                    onClick={() => setMobileDetail(false)}
                   >
-                    {props.render(
-                      { page: () => currentPage, onClose: props.onClose },
-                      props.context,
+                    <ArrowLeft size={21} />
+                  </button>
+                </Show>
+                <h2>Configurações</h2>
+                <Show when={props.onClose}>
+                  <button
+                    aria-label="Fechar configurações"
+                    onClick={props.onClose}
+                  >
+                    <X size={21} />
+                  </button>
+                </Show>
+              </header>
+            </Show>
+            <div class="settings-pages">
+              <div class="settings-list-pane">
+                <SettingsSidebar list={list} page={page} setPage={setPage} />
+              </div>
+              <div class="settings-content-pane">
+                <SettingsContent
+                  ref={props.contentRef}
+                  action={action}
+                  page={page}
+                  list={list}
+                  title={props.title}
+                  onClose={props.onClose}
+                >
+                  <Show when={page()} keyed>
+                    {(currentPage) => (
+                      <div
+                        ref={(el) =>
+                          animateEntrance(
+                            el,
+                            state.theme.activeTheme.motion === "full",
+                          )
+                        }
+                      >
+                        {props.render(
+                          { page: () => currentPage, onClose: props.onClose },
+                          props.context,
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
-              </Show>
-            </SettingsContent>
-          </>
+                  </Show>
+                </SettingsContent>
+              </div>
+            </div>
+          </div>
         )}
       </MemoisedList>
     </SettingsNavigationContext.Provider>

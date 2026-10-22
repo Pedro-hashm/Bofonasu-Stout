@@ -49,7 +49,7 @@ export function SettingsContent(props: {
           </InnerColumn>
         </InnerContent>
       </Show>
-      <ActionRail>
+      <ActionRail class="settings-action-rail">
         <Show when={props.onClose}>
           <CloseAction class="close">
             <IconButton variant="tonal" onPress={props.onClose}>

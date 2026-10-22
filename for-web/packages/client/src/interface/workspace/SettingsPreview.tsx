@@ -2,6 +2,7 @@ import { Dialog } from "@kobalte/core/dialog";
 import { Settings } from "@revolt/app/interface/settings/Settings";
 import { LanguageSettings } from "@revolt/app/interface/settings/user/Language";
 import Sounds from "@revolt/app/interface/settings/user/notifications/Sounds";
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import { LivingRoomSettings } from "@revolt/rtc/living-room/RoomStudio";
 import { useState } from "@revolt/state";
 import { Updates } from "@revolt/updates/Updates";
@@ -14,6 +15,7 @@ export function SettingsPreview(props: {
   onOpenChange: (open: boolean) => void;
 }) {
   const state = useState();
+  const mobile = useMobileLayout();
   const [content, setContent] = createSignal<HTMLDivElement>();
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
@@ -31,11 +33,13 @@ export function SettingsPreview(props: {
           </Dialog.Description>
           <Dialog.CloseButton
             class="demo-settings-close ws-icon-button"
-            aria-label="Fechar configurações"
+            aria-label="Fechar prévia"
+            style={{ display: mobile() ? "none" : undefined }}
           >
             <X size={20} />
           </Dialog.CloseButton>
           <Settings
+            onClose={() => props.onOpenChange(false)}
             context={undefined as never}
             contentRef={setContent}
             list={() => ({
@@ -56,6 +60,7 @@ export function SettingsPreview(props: {
                     },
                     {
                       id: "layout",
+                      hidden: mobile(),
                       title: "Layout",
                       icon: <PanelsTopLeft size={18} />,
                     },

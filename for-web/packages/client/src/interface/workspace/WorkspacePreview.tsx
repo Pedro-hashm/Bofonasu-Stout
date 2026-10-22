@@ -100,6 +100,7 @@ export function WorkspacePreview() {
               class="ws-icon-button"
               title="Personalizar"
               aria-label="Personalizar tema"
+              classList={{ "demo-desktop-personalize": true }}
               onClick={() => state.layout.setStudioOpen(true)}
             >
               <Settings2 size={19} />

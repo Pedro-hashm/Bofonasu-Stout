@@ -267,212 +267,304 @@ export const ServerList = (props: Props) => {
   };
 
   return (
-    <ServerListBase>
-      <div use:invisibleScrollable={{ direction: "y", class: listBase() }}>
-        <a
-          class={entryContainer({
-            indicator: !props.selectedServer() ? "selected" : undefined,
-          })}
-          href="/app"
-          onClick={() => workspace?.reveal("conversation")}
-          use:floating={{
-            tooltip: {
-              content:
-                homeNotifications() > 0
-                  ? t`You have ${homeNotifications()} pending friend requests.`
-                  : t`Home`,
-              placement: "right",
-            },
-          }}
-        >
-          <Avatar
-            size={42}
-            fallback={<Symbol fill>home</Symbol>}
-            holepunch={homeNotifications() ? "top-right" : undefined}
-            overlay={
-              <Show when={homeNotifications()}>
-                <Unreads.Graphic
-                  unread={homeNotifications() !== 0}
-                  count={homeNotifications()}
-                />
-              </Show>
-            }
-          />
-        </a>
-        <Tooltip
-          placement="right"
-          content={() => (
-            <Column>
-              <span>{props.user.username}</span>
-              <Text class="label" size="small">
-                {props.user.presence}
-              </Text>
-            </Column>
-          )}
-          aria={props.user.username}
-        >
-          <a ref={setMenuButton} class={entryContainer()}>
-            <Avatar
-              size={42}
-              src={props.user.avatarURL}
-              holepunch={"bottom-right"}
-              overlay={<UserStatus.Graphic status={props.user.presence} />}
-              interactive
-            />
-          </a>
-          <UserMenu anchor={menuButton} />
-        </Tooltip>
-        <For each={props.unreadConversations.slice(0, 9)}>
-          {(conversation) => (
-            <Tooltip placement="right" content={conversation.displayName}>
-              <a
-                class={entryContainer()}
-                use:floating={props.menuGenerator(conversation)}
-                href={`/channel/${conversation.id}`}
-              >
+    <Show
+      when={workspace?.narrow()}
+      fallback={
+        <ServerListBase>
+          <div use:invisibleScrollable={{ direction: "y", class: listBase() }}>
+            <a
+              class={entryContainer({
+                indicator: !props.selectedServer() ? "selected" : undefined,
+              })}
+              href="/app"
+              onClick={() => workspace?.reveal("conversation")}
+              use:floating={{
+                tooltip: {
+                  content:
+                    homeNotifications() > 0
+                      ? t`You have ${homeNotifications()} pending friend requests.`
+                      : t`Home`,
+                  placement: "right",
+                },
+              }}
+            >
+              <Avatar
+                size={42}
+                fallback={<Symbol fill>home</Symbol>}
+                holepunch={homeNotifications() ? "top-right" : undefined}
+                overlay={
+                  <Show when={homeNotifications()}>
+                    <Unreads.Graphic
+                      unread={homeNotifications() !== 0}
+                      count={homeNotifications()}
+                    />
+                  </Show>
+                }
+              />
+            </a>
+            <Tooltip
+              placement="right"
+              content={() => (
+                <Column>
+                  <span>{props.user.username}</span>
+                  <Text class="label" size="small">
+                    {props.user.presence}
+                  </Text>
+                </Column>
+              )}
+              aria={props.user.username}
+            >
+              <a ref={setMenuButton} class={entryContainer()}>
                 <Avatar
                   size={42}
-                  // TODO: fix this
-                  src={conversation.iconURL}
-                  holepunch={conversation.unread ? "top-right" : "none"}
-                  overlay={
-                    <>
-                      <Show when={conversation.unread}>
-                        <Unreads.Graphic
-                          count={conversation.mentions?.size ?? 0}
-                          unread
-                        />
-                      </Show>
-                    </>
-                  }
-                  fallback={
-                    conversation.name ?? conversation.recipient?.username
-                  }
+                  src={props.user.avatarURL}
+                  holepunch={"bottom-right"}
+                  overlay={<UserStatus.Graphic status={props.user.presence} />}
                   interactive
                 />
               </a>
+              <UserMenu anchor={menuButton} />
             </Tooltip>
-          )}
-        </For>
-        <Show when={props.unreadConversations.length > 9}>
-          <a class={entryContainer()} href={`/`}>
-            <Avatar
-              size={42}
-              fallback={<>+{props.unreadConversations.length - 9}</>}
-            />
-          </a>
-        </Show>
-        <LineDivider />
-        <div ref={rail}>
-          <For each={props.orderedEntries}>
-            {(entry) => (
-              <Switch>
-                <Match when={entry?.type === "server" && entry}>
-                  {(item) => (
-                    <ServerEntry
-                      server={item().server}
-                      selectedServer={props.selectedServer}
-                      menuGenerator={props.menuGenerator}
-                      drag={drag}
+            <For each={props.unreadConversations.slice(0, 9)}>
+              {(conversation) => (
+                <Tooltip placement="right" content={conversation.displayName}>
+                  <a
+                    class={entryContainer()}
+                    use:floating={props.menuGenerator(conversation)}
+                    href={`/channel/${conversation.id}`}
+                  >
+                    <Avatar
+                      size={42}
+                      // TODO: fix this
+                      src={conversation.iconURL}
+                      holepunch={conversation.unread ? "top-right" : "none"}
+                      overlay={
+                        <>
+                          <Show when={conversation.unread}>
+                            <Unreads.Graphic
+                              count={conversation.mentions?.size ?? 0}
+                              unread
+                            />
+                          </Show>
+                        </>
+                      }
+                      fallback={
+                        conversation.name ?? conversation.recipient?.username
+                      }
+                      interactive
                     />
-                  )}
-                </Match>
-                <Match when={entry?.type === "folder" && entry}>
-                  {(item) => (
-                    <FolderEntry
-                      entry={item()}
-                      selectedServer={props.selectedServer}
-                      menuGenerator={props.menuGenerator}
-                      drag={drag}
-                    />
-                  )}
-                </Match>
-              </Switch>
-            )}
-          </For>
-          <Show when={insertionAtEnd()}>
-            <div class={railInsertion} style={{ position: "relative" }} />
-          </Show>
-        </div>
-        <div aria-live="polite" class={srOnly}>
-          {drag.status()}
-        </div>
-        <Show when={heldEntry()}>
-          {(held) => (
-            <Portal mount={document.getElementById("floating")!}>
-              <div
-                class={railGhost}
-                style={{
-                  left: `${(drag.pointer()?.x ?? 0) - 21}px`,
-                  top: `${(drag.pointer()?.y ?? 0) - 21}px`,
-                }}
-              >
-                <Switch>
-                  <Match when={held().type === "server" && held()}>
-                    {(item) => (
-                      <Avatar
-                        size={42}
-                        src={(item() as { server: Server }).server.iconURL}
-                        fallback={(item() as { server: Server }).server.name}
-                      />
-                    )}
-                  </Match>
-                  <Match when={held().type === "folder" && held()}>
-                    {(item) => (
-                      <Avatar
-                        size={42}
-                        fallback={
-                          <FolderPreview
-                            servers={(item() as { servers: Server[] }).servers}
-                            colour={
-                              (item() as { folder: { colour?: string } }).folder
-                                .colour
+                  </a>
+                </Tooltip>
+              )}
+            </For>
+            <Show when={props.unreadConversations.length > 9}>
+              <a class={entryContainer()} href={`/`}>
+                <Avatar
+                  size={42}
+                  fallback={<>+{props.unreadConversations.length - 9}</>}
+                />
+              </a>
+            </Show>
+            <LineDivider />
+            <div ref={rail}>
+              <For each={props.orderedEntries}>
+                {(entry) => (
+                  <Switch>
+                    <Match when={entry?.type === "server" && entry}>
+                      {(item) => (
+                        <ServerEntry
+                          server={item().server}
+                          selectedServer={props.selectedServer}
+                          menuGenerator={props.menuGenerator}
+                          drag={drag}
+                        />
+                      )}
+                    </Match>
+                    <Match when={entry?.type === "folder" && entry}>
+                      {(item) => (
+                        <FolderEntry
+                          entry={item()}
+                          selectedServer={props.selectedServer}
+                          menuGenerator={props.menuGenerator}
+                          drag={drag}
+                        />
+                      )}
+                    </Match>
+                  </Switch>
+                )}
+              </For>
+              <Show when={insertionAtEnd()}>
+                <div class={railInsertion} style={{ position: "relative" }} />
+              </Show>
+            </div>
+            <div aria-live="polite" class={srOnly}>
+              {drag.status()}
+            </div>
+            <Show when={heldEntry()}>
+              {(held) => (
+                <Portal mount={document.getElementById("floating")!}>
+                  <div
+                    class={railGhost}
+                    style={{
+                      left: `${(drag.pointer()?.x ?? 0) - 21}px`,
+                      top: `${(drag.pointer()?.y ?? 0) - 21}px`,
+                    }}
+                  >
+                    <Switch>
+                      <Match when={held().type === "server" && held()}>
+                        {(item) => (
+                          <Avatar
+                            size={42}
+                            src={(item() as { server: Server }).server.iconURL}
+                            fallback={
+                              (item() as { server: Server }).server.name
                             }
                           />
-                        }
-                      />
-                    )}
-                  </Match>
-                </Switch>
-              </div>
-            </Portal>
-          )}
-        </Show>
-        <Tooltip placement="right" content={"Create or join a server"}>
-          <a
-            class={entryContainer()}
-            onClick={() => props.onCreateOrJoinServer()}
-          >
-            <Avatar size={42} fallback={<Symbol>add</Symbol>} />
-          </a>
-        </Tooltip>
-        <Show when={instance.isStoat}>
-          <Tooltip placement="right" content={"Find new servers to join"}>
+                        )}
+                      </Match>
+                      <Match when={held().type === "folder" && held()}>
+                        {(item) => (
+                          <Avatar
+                            size={42}
+                            fallback={
+                              <FolderPreview
+                                servers={
+                                  (item() as { servers: Server[] }).servers
+                                }
+                                colour={
+                                  (item() as { folder: { colour?: string } })
+                                    .folder.colour
+                                }
+                              />
+                            }
+                          />
+                        )}
+                      </Match>
+                    </Switch>
+                  </div>
+                </Portal>
+              )}
+            </Show>
+            <Tooltip placement="right" content={"Create or join a server"}>
+              <a
+                class={entryContainer()}
+                onClick={() => props.onCreateOrJoinServer()}
+              >
+                <Avatar size={42} fallback={<Symbol>add</Symbol>} />
+              </a>
+            </Tooltip>
+            <Show when={instance.isStoat}>
+              <Tooltip placement="right" content={"Find new servers to join"}>
+                <a
+                  href={state.layout.getLastActiveDiscoverPath()}
+                  class={entryContainer()}
+                >
+                  <Avatar size={42} fallback={<Symbol fill>explore</Symbol>} />
+                </a>
+              </Tooltip>
+            </Show>
+          </div>
+          <Shadow>
+            <div />
+          </Shadow>
+          <Tooltip placement="right" content="Settings">
             <a
-              href={state.layout.getLastActiveDiscoverPath()}
               class={entryContainer()}
+              onClick={() => openModal({ type: "settings", config: "user" })}
             >
-              <Avatar size={42} fallback={<Symbol fill>explore</Symbol>} />
+              <Avatar
+                size={42}
+                fallback={<Symbol fill>settings</Symbol>}
+                interactive
+              />
             </a>
           </Tooltip>
-        </Show>
-      </div>
-      <Shadow>
-        <div />
-      </Shadow>
-      <Tooltip placement="right" content="Settings">
-        <a
-          class={entryContainer()}
-          onClick={() => openModal({ type: "settings", config: "user" })}
-        >
+        </ServerListBase>
+      }
+    >
+      <nav class="mobile-server-list" aria-label="Servidores e conversas">
+        <div class="mobile-server-account">
           <Avatar
-            size={42}
-            fallback={<Symbol fill>settings</Symbol>}
-            interactive
+            size={44}
+            src={props.user.avatarURL}
+            fallback={props.user.username}
           />
+          <div>
+            <strong>{props.user.displayName ?? props.user.username}</strong>
+            <span>Escolha onde conversar</span>
+          </div>
+        </div>
+        <a
+          class="mobile-server-row"
+          href="/app"
+          onClick={() => workspace?.reveal("conversation")}
+        >
+          <Avatar size={44} fallback={<Symbol>home</Symbol>} />
+          <span>
+            <strong>Amigos e mensagens</strong>
+            <small>Suas conversas diretas</small>
+          </span>
         </a>
-      </Tooltip>
-    </ServerListBase>
+        <h2>Seus servidores</h2>
+        <For
+          each={props.orderedServers}
+          fallback={
+            <p class="mobile-server-empty">
+              Entre em um servidor para começar.
+            </p>
+          }
+        >
+          {(server) => (
+            <a
+              class="mobile-server-row"
+              data-selected={props.selectedServer() === server.id}
+              aria-current={
+                props.selectedServer() === server.id ? "page" : undefined
+              }
+              href={state.layout.getLastActiveServerPath(server.id)}
+              onClick={() => workspace?.reveal("channels")}
+            >
+              <Avatar size={44} src={server.iconURL} fallback={server.name} />
+              <span>
+                <strong>{server.name}</strong>
+                <small>Abrir canais</small>
+              </span>
+              <Show when={server.unread}>
+                <i aria-label="Mensagens não lidas" />
+              </Show>
+            </a>
+          )}
+        </For>
+        <button
+          class="mobile-server-join"
+          onClick={() => props.onCreateOrJoinServer()}
+        >
+          <Symbol>add</Symbol> Criar ou entrar em servidor
+        </button>
+        <Show when={props.unreadConversations.length}>
+          <h2>Conversas recentes</h2>
+          <For each={props.unreadConversations.slice(0, 9)}>
+            {(channel) => (
+              <a
+                class="mobile-server-row"
+                href={`/channel/${channel.id}`}
+                onClick={() => workspace?.reveal("conversation")}
+              >
+                <Avatar
+                  size={44}
+                  src={channel.iconURL}
+                  fallback={channel.displayName}
+                />
+                <span>
+                  <strong>{channel.displayName}</strong>
+                  <small>Mensagens novas</small>
+                </span>
+              </a>
+            )}
+          </For>
+        </Show>
+      </nav>
+    </Show>
   );
 };
 

@@ -316,10 +316,11 @@ export class Layout extends AbstractStore<"layout", TypeLayout> {
     this.set("savedPresets", [...this.get().savedPresets, preset].slice(-20));
   }
 
-  applySavedPreset(id: string) {
+  applySavedPreset(id: string, appearanceOnly = false) {
     const preset = this.get().savedPresets.find((item) => item.id === id);
     if (!preset) return;
     this.state.theme.applyPreset(preset.theme);
+    if (appearanceOnly) return;
     this.set("widgetOrder", [...preset.widgetOrder]);
     this.set("widgets", cleanWidgetConfigs(preset.widgets));
   }
@@ -345,7 +346,7 @@ export class Layout extends AbstractStore<"layout", TypeLayout> {
     );
   }
 
-  importAppearance(json: string) {
+  importAppearance(json: string, appearanceOnly = false) {
     if (json.length > 100_000) throw new Error("O arquivo excede 100 KB.");
     const value = JSON.parse(json);
     if (
@@ -359,8 +360,10 @@ export class Layout extends AbstractStore<"layout", TypeLayout> {
       throw new Error("Arquivo de tema inválido ou versão incompatível.");
     batch(() => {
       this.state.theme.applyPreset(this.state.theme.clean(value.theme));
-      this.set("widgets", cleanWidgetConfigs(value.widgets));
-      this.set("widgetOrder", cleanWidgetOrder(value.widgetOrder));
+      if (!appearanceOnly) {
+        this.set("widgets", cleanWidgetConfigs(value.widgets));
+        this.set("widgetOrder", cleanWidgetOrder(value.widgetOrder));
+      }
       this.savePreset(
         typeof value.name === "string" ? value.name : "Tema importado",
       );

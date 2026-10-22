@@ -16,6 +16,7 @@ import { createResizeObserver } from "@solid-primitives/resize-observer";
 import { Channel } from "stoat.js";
 import { styled } from "styled-system/jsx";
 
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import { useVoice } from "@revolt/rtc";
 import { VoiceLayout } from "@revolt/rtc/state";
 import { useState } from "@revolt/state";
@@ -47,6 +48,7 @@ const callCardContext = createContext<(info?: Info) => void>();
 export function VoiceCallCardContext(props: { children: JSX.Element }) {
   const voice = useVoice();
   const state = useState();
+  const mobile = useMobileLayout();
   const inCall = () => !!voice.channel();
 
   const [mode, setMode] = createSignal<Mode>();
@@ -189,7 +191,12 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
       {props.children}
       <Portal mount={document.getElementById("floating")! as HTMLDivElement}>
         <Float
+          data-mobile-call={mobile()}
           style={{
+            visibility:
+              mobile() && !info() && voice.layout() !== "fullscreen"
+                ? "hidden"
+                : undefined,
             ...createShapeDensityVariables(
               state.theme.widgetCorners.voice ?? state.theme.cornerScale,
               state.theme.widgetDensities.voice ?? state.theme.densityScale,

@@ -4,6 +4,7 @@ import { Motion, Presence } from "solid-motionone";
 import { css } from "styled-system/css";
 
 import { Settings, SettingsConfigurations } from "@revolt/app";
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import { useState } from "@revolt/state";
 import { DialogProps } from "@revolt/ui";
 import { SlideDrawer } from "@revolt/ui/components/navigation/SlideDrawer";
@@ -17,6 +18,7 @@ export function SettingsModal(
   props: DialogProps & Modals & { type: "settings" },
 ) {
   const state = useState();
+  const mobile = useMobileLayout();
   const { setDiagDrawer } = state;
   const duration = () =>
     state.theme.activeTheme.motion === "off" ||
@@ -33,7 +35,7 @@ export function SettingsModal(
   const [contRef, setContRef] = createSignal<HTMLDivElement>();
   createEffect(
     on(contRef, (cont) => {
-      if (!cont || sDrawer) return;
+      if (!cont || sDrawer || mobile()) return;
       sDrawer = new SlideDrawer(cont, rootRef!);
       setDiagDrawer(sDrawer);
     }),

@@ -42,6 +42,16 @@ requerem teste em aparelhos reais. Receber apresentações utiliza o player web;
 enviar a própria tela e manter chamadas em segundo plano exigem integrações
 nativas adicionais e não são oferecidos como recursos concluídos nesta versão.
 
+## Interface mobile
+
+No celular, a barra inferior abre Canais, Chat, Chamada e Ajustes. O botão no
+cabeçalho abre a lista de servidores. As configurações usam uma lista de seções
+e páginas separadas, com navegação de voltar.
+
+Personalização fica em **Ajustes → Aparência → Abrir personalização**. No mobile,
+os presets alteram cores, fontes e formas; o editor de posição e tamanho dos
+módulos é exclusivo do desktop. Trocar de tela mantém a chamada conectada.
+
 ## Backend oficial do Stoat
 
 Por padrão, o cliente usa a infraestrutura hospedada do Stoat (`https://api.stoat.chat` e `stoat.chat`). Para manter esse comportamento, não defina `VITE_API_URL` nem `VITE_HOST` no arquivo `for-web/packages/client/.env`. O arquivo `.env.example` deixa as opções de backend local comentadas.
