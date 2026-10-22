@@ -12,7 +12,6 @@ export default function Sounds() {
   const controller = useSound();
   const { t } = useLingui();
   const entries = (): { name: SoundName; label: string }[] => [
-    { name: "uiClick", label: t`Interface clicks` },
     { name: "message", label: t`Message Received` },
     { name: "mute", label: t`Mute` },
     { name: "unmute", label: t`Unmute` },

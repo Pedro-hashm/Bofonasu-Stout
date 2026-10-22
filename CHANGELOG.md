@@ -2,6 +2,15 @@
 
 Histórico das builds. As versões publicadas podem ser consultadas no GitHub Releases.
 
+## Em desenvolvimento — ainda não publicado
+
+### Efeitos sonoros da chamada
+
+- Removido o som genérico de clicar em botões, menus e navegação.
+- Novos MP3 locais para entrar e sair da chamada, mutar e reativar, iniciar e encerrar apresentações e entrada e saída de espectadores.
+- Microfone e fone usam os mesmos efeitos de mute/unmute, reproduzidos apenas para quem acionou.
+- Avisos de espectadores sincronizados entre os clientes da chamada, sem repetir ao trocar entre Living Room, chamada normal e tela cheia.
+
 ## 1.9.0 — 2026-10-21
 
 ### Interface mobile com navegação própria

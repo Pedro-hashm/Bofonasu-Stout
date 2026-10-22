@@ -2,7 +2,6 @@ import { AbstractStore } from ".";
 import { State } from "..";
 
 export const SOUND_NAMES = [
-  "uiClick",
   "deafen",
   "message",
   "mute",

@@ -40,6 +40,7 @@ import { Device, useDevice } from "@revolt/common";
 import { DesktopUpdates } from "@revolt/updates";
 import { InRoom } from "./components/InRoom";
 import { RoomAudioManager } from "./components/RoomAudioManager";
+import { StreamViewerSounds } from "./components/StreamViewerSounds";
 import { RoomSyncManager } from "./living-room/RoomSync";
 import {
   createCallAudioContext,
@@ -753,6 +754,7 @@ export function VoiceContext(props: { children: JSX.Element }) {
       <DesktopUpdates />
       <RoomContext.Provider value={voice.room}>
         <RoomSyncManager />
+        <StreamViewerSounds />
         <SoundboardProvider>
           <VoiceCallCardContext>{props.children}</VoiceCallCardContext>
           <InRoom>

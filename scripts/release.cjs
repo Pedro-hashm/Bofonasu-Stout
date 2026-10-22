@@ -44,6 +44,9 @@ function validate(catalog, pkg) {
 function writeChangelog(catalog) {
   const content =
     "# Changelog — Bofonasu Stout\n\nHistórico das builds. As versões publicadas podem ser consultadas no GitHub Releases.\n\n" +
+    (catalog.unreleased
+      ? `## Em desenvolvimento — ainda não publicado\n\n${notes(catalog.unreleased).replace(/^# /, "### ")}\n`
+      : "") +
     catalog.versions
       .map(
         (entry) =>
@@ -138,7 +141,13 @@ async function main() {
       month: "2-digit",
       day: "2-digit",
     }).format(new Date());
-    catalog.versions.unshift({ version, date, title, changes });
+    catalog.versions.unshift({
+      version,
+      date,
+      title,
+      changes: [...(catalog.unreleased?.changes ?? []), ...changes],
+    });
+    delete catalog.unreleased;
     pkg.version = version;
     if (fs.existsSync(mobilePath)) {
       const mobile = read(mobilePath);
