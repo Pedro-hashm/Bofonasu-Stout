@@ -52,7 +52,7 @@ export function SettingsModal(
           "z-index": 100,
           position: "fixed",
           width: "100%",
-          height: "100vh",
+          height: "100dvh",
           left: 0,
           top: 0,
           "pointer-events": "none",
