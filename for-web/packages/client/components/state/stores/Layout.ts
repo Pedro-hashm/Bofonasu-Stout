@@ -75,12 +75,27 @@ export class Layout extends AbstractStore<"layout", TypeLayout> {
   private updateStudioOpen: Setter<boolean>;
   private isVoiceExpanded: Accessor<boolean>;
   private updateVoiceExpanded: Setter<boolean>;
+  private isConversationExpanded: Accessor<boolean>;
+  private updateConversationExpanded: Setter<boolean>;
+
+  get conversationExpanded() {
+    return this.isConversationExpanded();
+  }
+  setConversationExpanded(value: boolean) {
+    batch(() => {
+      this.updateConversationExpanded(value);
+      if (value) this.updateVoiceExpanded(false);
+    });
+  }
 
   get voiceExpanded() {
     return this.isVoiceExpanded();
   }
   setVoiceExpanded(value: boolean) {
-    this.updateVoiceExpanded(value);
+    batch(() => {
+      this.updateVoiceExpanded(value);
+      if (value) this.updateConversationExpanded(false);
+    });
   }
 
   swapConversationVoice() {
@@ -115,6 +130,9 @@ export class Layout extends AbstractStore<"layout", TypeLayout> {
     const [voiceExpanded, setVoiceExpanded] = createSignal(false);
     this.isVoiceExpanded = voiceExpanded;
     this.updateVoiceExpanded = setVoiceExpanded;
+    const [conversationExpanded, setConversationExpanded] = createSignal(false);
+    this.isConversationExpanded = conversationExpanded;
+    this.updateConversationExpanded = setConversationExpanded;
   }
 
   get widgetOrder() {

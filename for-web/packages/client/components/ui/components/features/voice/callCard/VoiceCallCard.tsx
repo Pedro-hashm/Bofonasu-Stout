@@ -60,6 +60,10 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
     state.layout.setVoiceExpanded(voice.layout() === "expanded"),
   );
   onCleanup(() => state.layout.setVoiceExpanded(false));
+  createEffect(() => {
+    if (state.layout.conversationExpanded && voice.layout() === "expanded")
+      voice.resetLayout();
+  });
 
   let ref: HTMLDivElement | undefined,
     events: AbortController | null,
@@ -194,7 +198,9 @@ export function VoiceCallCardContext(props: { children: JSX.Element }) {
           data-mobile-call={mobile()}
           style={{
             visibility:
-              mobile() && !info() && voice.layout() !== "fullscreen"
+              (mobile() || state.layout.conversationExpanded) &&
+              !info() &&
+              voice.layout() !== "fullscreen"
                 ? "hidden"
                 : undefined,
             ...createShapeDensityVariables(

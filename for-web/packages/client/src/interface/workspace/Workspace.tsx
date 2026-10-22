@@ -121,6 +121,8 @@ export function Workspace(props: {
   });
   const expanded = () =>
     state.layout.voiceExpanded && !narrow() && !state.layout.editMode;
+  const chatExpanded = () =>
+    state.layout.conversationExpanded && !narrow() && !state.layout.editMode;
   let canvas!: HTMLDivElement;
   let root!: HTMLDivElement;
   let stopGesture: (() => void) | undefined;
@@ -135,6 +137,7 @@ export function Workspace(props: {
       narrow: narrow(),
       editing: state.layout.editMode,
       expanded: expanded(),
+      chatExpanded: chatExpanded(),
     });
     requestAnimationFrame(() =>
       window.dispatchEvent(new Event("stoat:layout")),
@@ -151,6 +154,8 @@ export function Workspace(props: {
     if (narrow()) return active() === id;
     if (expanded() && id === "conversation") return false;
     if (expanded() && id === "voice") return true;
+    if (chatExpanded() && id === "voice") return false;
+    if (chatExpanded() && id === "conversation") return true;
     return state.layout.widgets[id].visible;
   };
   const context: WorkspaceContextValue = {
@@ -264,7 +269,8 @@ export function Workspace(props: {
   }
   function panelStyle(id: LayoutWidgetId): JSX.CSSProperties {
     const f =
-      id === "voice" && expanded()
+      (id === "voice" && expanded()) ||
+      (id === "conversation" && chatExpanded())
         ? enclosingFrame(
             state.layout.widgets.voice.frame,
             state.layout.widgets.conversation.frame,
@@ -289,7 +295,8 @@ export function Workspace(props: {
       "z-index":
         id === "navigation" && !state.layout.editMode
           ? 40
-          : expanded() && id === "voice"
+          : (expanded() && id === "voice") ||
+              (chatExpanded() && id === "conversation")
             ? 30
             : state.layout.editMode && selected() === id
               ? 20

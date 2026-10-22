@@ -19,7 +19,7 @@ import {
 import { Show } from "solid-js";
 import { CallControlButton } from "./CallControlButton";
 
-export function VoiceCallCardActions(props: { size: "xs" | "sm" }) {
+export function VoiceCallCardActions(props: { size: "xs" | "sm" | "compact" }) {
   const voice = useVoice();
   const state = useState();
   const navigate = useNavigate();

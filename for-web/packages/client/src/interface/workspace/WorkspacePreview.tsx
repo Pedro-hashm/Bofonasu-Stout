@@ -1,10 +1,17 @@
 import { useSound } from "@revolt/client/Sounds";
 import { RoomWorkspace } from "@revolt/rtc/living-room/RoomStudio";
+import { SoundboardQuickMenu } from "@revolt/rtc/soundboard/SoundboardQuickMenu";
 import { useState } from "@revolt/state";
 import { Avatar, MessageContainer } from "@revolt/ui";
 import { CallControlButton } from "@revolt/ui/components/features/voice/callCard/CallControlButton";
 import { CallControlsTray } from "@revolt/ui/components/features/voice/callCard/CallControlsTray";
+import {
+  CompactCallAvatar,
+  CompactCallFrame,
+  isCompactCallSize,
+} from "@revolt/ui/components/features/voice/callCard/CompactCall";
 import { ListView2 } from "@revolt/ui/components/utils/ListView2";
+import { createResizeObserver } from "@solid-primitives/resize-observer";
 import {
   Armchair,
   ArrowLeftRight,
@@ -18,6 +25,7 @@ import {
   MicOff,
   Minimize2,
   MonitorUp,
+  Music2,
   Paperclip,
   Phone,
   PhoneOff,
@@ -30,7 +38,8 @@ import {
   Users,
   Video,
 } from "lucide-solid";
-import { createSignal, For, Show } from "solid-js";
+import { createSignal, createUniqueId, For, onMount, Show } from "solid-js";
+import { ExpandChatButton } from "./ExpandChatButton";
 import { SettingsPreview } from "./SettingsPreview";
 import { DEMO_MEMBERS } from "./ThemePreview";
 import { useWorkspace, Workspace, WorkspaceModule } from "./Workspace";
@@ -134,6 +143,7 @@ export function WorkspacePreview() {
               <Pin size={17} />
             </button>
             <PreviewMembersButton />
+            <ExpandChatButton />
             <button
               class="ws-icon-button"
               aria-label="Buscar mensagens"
@@ -340,148 +350,228 @@ function PreviewCall() {
   const [camera, setCamera] = createSignal(false);
   const [screen, setScreen] = createSignal(false);
   const [connected, setConnected] = createSignal(false);
-  return (
-    <div class="demo-call">
-      <header>
-        <Headphones size={17} />
-        <strong>Sala de estar</strong>
-        <CallControlButton
-          label="Alternar Living Room"
-          pressed={state.livingRoom.enabled}
-          onClick={() => (state.livingRoom.enabled = !state.livingRoom.enabled)}
-        >
-          <Armchair />
+  const [compact, setCompact] = createSignal(false);
+  let previewCall!: HTMLDivElement;
+  onMount(() =>
+    createResizeObserver(previewCall, (_size, element) => {
+      setCompact(isCompactCallSize(element.offsetWidth, element.offsetHeight));
+    }),
+  );
+  const expand = () => state.layout.setVoiceExpanded(true);
+  const actions = (hide: () => void) => (
+    <div
+      class="ws-call-actions"
+      data-ui-sound="off"
+      role="group"
+      aria-label="Controles da chamada de demonstração"
+    >
+      <Show when={!compact()}>
+        <CallControlButton label="Esconder bandeja" onClick={hide}>
+          <ChevronDown />
         </CallControlButton>
-        <Show when={!workspace?.narrow()}>
-          <div class="call-layout-controls">
-            <CallControlButton
-              label="Trocar posições de conversa e chamada"
-              onClick={() => state.layout.swapConversationVoice()}
-            >
-              <ArrowLeftRight />
-            </CallControlButton>
-            <CallControlButton
-              label={
-                state.layout.voiceExpanded
-                  ? "Restaurar chamada"
-                  : "Maximizar chamada"
-              }
-              pressed={state.layout.voiceExpanded}
-              onClick={() =>
-                state.layout.setVoiceExpanded(!state.layout.voiceExpanded)
-              }
-            >
-              <Show when={state.layout.voiceExpanded} fallback={<Maximize2 />}>
-                <Minimize2 />
-              </Show>
-            </CallControlButton>
-          </div>
-        </Show>
-      </header>
-      <Show
-        when={state.livingRoom.enabled}
-        fallback={
-          <div class="demo-call-stage">
-            <span class="demo-call-avatar">pe</span>
-            <span>
-              {connected()
-                ? "Pedro · chamada de demonstração"
-                : "Prévia local · sem conexão de voz"}
-            </span>
-          </div>
-        }
-      >
-        <RoomWorkspace />
       </Show>
+      <CallControlButton
+        label={muted() ? "Ativar microfone" : "Mutar"}
+        pressed={muted()}
+        tone={muted() ? "muted" : undefined}
+        onClick={() => {
+          sound.playSound(muted() ? "unmute" : "mute");
+          setMuted(!muted());
+        }}
+      >
+        <Show when={muted()} fallback={<Mic />}>
+          <MicOff />
+        </Show>
+      </CallControlButton>
+      <CallControlButton
+        label={deafened() ? "Ativar áudio" : "Ensurdecer"}
+        pressed={deafened()}
+        tone={deafened() ? "muted" : undefined}
+        onClick={() => {
+          sound.playSound(deafened() ? "undeafen" : "deafen");
+          setDeafened(!deafened());
+        }}
+      >
+        <Show when={deafened()} fallback={<Headphones />}>
+          <HeadphoneOff />
+        </Show>
+      </CallControlButton>
+      <CallControlButton
+        label="Câmera"
+        pressed={camera()}
+        tone={camera() ? "active" : undefined}
+        onClick={() => {
+          sound.playSound(camera() ? "cameraOff" : "cameraOn");
+          setCamera(!camera());
+        }}
+      >
+        <Video />
+      </CallControlButton>
+      <CallControlButton
+        label="Compartilhar tela"
+        pressed={screen()}
+        tone={screen() ? "active" : undefined}
+        onClick={() => {
+          sound.playSound(screen() ? "streamEnd" : "streamStart");
+          setScreen(!screen());
+        }}
+      >
+        <MonitorUp />
+      </CallControlButton>
+      <CallControlButton
+        label="Desconectar"
+        tone="disconnect"
+        onClick={() => {
+          setConnected(false);
+          sound.playSound("userLeaveVoice");
+          state.layout.setVoiceExpanded(false);
+        }}
+      >
+        <PhoneOff />
+      </CallControlButton>
+      <Show when={compact()}>
+        <PreviewSfxButton />
+      </Show>
+    </div>
+  );
+  return (
+    <div ref={previewCall} class="demo-call" data-compact={compact()}>
       <Show
-        when={connected()}
+        when={!compact()}
         fallback={
-          <button
-            class="ws-button ws-button--accent"
-            data-ui-sound="off"
-            onClick={() => {
-              setConnected(true);
-              sound.playSound("userJoinVoice");
-            }}
+          <CompactCallFrame
+            channel="Sala de estar"
+            status={connected() ? "Voz conectada" : "Prévia local"}
+            count={connected() ? 7 : 1}
+            streams={screen() ? 1 : 0}
+            onExpand={expand}
+            tools={(hide) => (
+              <div class="call-layout-controls">
+                <CallControlButton
+                  label="Usar Living Room"
+                  onClick={() => {
+                    state.livingRoom.enabled = true;
+                    expand();
+                  }}
+                >
+                  <Armchair />
+                </CallControlButton>
+                <CallControlButton label="Esconder bandeja" onClick={hide}>
+                  <ChevronDown />
+                </CallControlButton>
+                <CallControlButton
+                  label="Trocar posições de conversa e chamada"
+                  onClick={() => state.layout.swapConversationVoice()}
+                >
+                  <ArrowLeftRight />
+                </CallControlButton>
+              </div>
+            )}
+            actions={
+              <Show
+                when={connected()}
+                fallback={
+                  <button
+                    class="ws-button ws-button--accent"
+                    onClick={() => setConnected(true)}
+                  >
+                    Simular chamada
+                  </button>
+                }
+              >
+                {actions(() => {})}
+              </Show>
+            }
           >
-            <Phone size={15} />
-            Simular chamada
-          </button>
+            <CompactCallAvatar
+              name="Pedro"
+              speaking={connected()}
+              onClick={expand}
+            />
+            <Show when={connected()}>
+              <For each={DEMO_MEMBERS}>
+                {(person) => (
+                  <CompactCallAvatar name={person.name} onClick={expand} />
+                )}
+              </For>
+            </Show>
+          </CompactCallFrame>
         }
       >
-        <CallControlsTray>
-          {(hide) => (
-            <div
-              class="ws-call-actions"
-              data-ui-sound="off"
-              role="group"
-              aria-label="Controles da chamada de demonstração"
-            >
-              <CallControlButton label="Esconder bandeja" onClick={hide}>
-                <ChevronDown />
+        <header>
+          <Headphones size={17} />
+          <strong>Sala de estar</strong>
+          <CallControlButton
+            label="Alternar Living Room"
+            pressed={state.livingRoom.enabled}
+            onClick={() =>
+              (state.livingRoom.enabled = !state.livingRoom.enabled)
+            }
+          >
+            <Armchair />
+          </CallControlButton>
+          <Show when={!workspace?.narrow()}>
+            <div class="call-layout-controls">
+              <CallControlButton
+                label="Trocar posições de conversa e chamada"
+                onClick={() => state.layout.swapConversationVoice()}
+              >
+                <ArrowLeftRight />
               </CallControlButton>
               <CallControlButton
-                label={muted() ? "Ativar microfone" : "Mutar"}
-                pressed={muted()}
-                tone={muted() ? "muted" : undefined}
-                onClick={() => {
-                  sound.playSound(muted() ? "unmute" : "mute");
-                  setMuted(!muted());
-                }}
+                label={
+                  state.layout.voiceExpanded
+                    ? "Restaurar chamada"
+                    : "Maximizar chamada"
+                }
+                pressed={state.layout.voiceExpanded}
+                onClick={() =>
+                  state.layout.setVoiceExpanded(!state.layout.voiceExpanded)
+                }
               >
-                <Show when={muted()} fallback={<Mic />}>
-                  <MicOff />
+                <Show
+                  when={state.layout.voiceExpanded}
+                  fallback={<Maximize2 />}
+                >
+                  <Minimize2 />
                 </Show>
-              </CallControlButton>
-              <CallControlButton
-                label={deafened() ? "Ativar áudio" : "Ensurdecer"}
-                pressed={deafened()}
-                tone={deafened() ? "muted" : undefined}
-                onClick={() => {
-                  sound.playSound(deafened() ? "undeafen" : "deafen");
-                  setDeafened(!deafened());
-                }}
-              >
-                <Show when={deafened()} fallback={<Headphones />}>
-                  <HeadphoneOff />
-                </Show>
-              </CallControlButton>
-              <CallControlButton
-                label="Câmera"
-                pressed={camera()}
-                tone={camera() ? "active" : undefined}
-                onClick={() => {
-                  sound.playSound(camera() ? "cameraOff" : "cameraOn");
-                  setCamera(!camera());
-                }}
-              >
-                <Video />
-              </CallControlButton>
-              <CallControlButton
-                label="Compartilhar tela"
-                pressed={screen()}
-                tone={screen() ? "active" : undefined}
-                onClick={() => {
-                  sound.playSound(screen() ? "streamEnd" : "streamStart");
-                  setScreen(!screen());
-                }}
-              >
-                <MonitorUp />
-              </CallControlButton>
-              <CallControlButton
-                label="Desconectar"
-                tone="disconnect"
-                onClick={() => {
-                  setConnected(false);
-                  sound.playSound("userLeaveVoice");
-                  state.layout.setVoiceExpanded(false);
-                }}
-              >
-                <PhoneOff />
               </CallControlButton>
             </div>
-          )}
-        </CallControlsTray>
+          </Show>
+        </header>
+        <Show
+          when={state.livingRoom.enabled}
+          fallback={
+            <div class="demo-call-stage">
+              <span class="demo-call-avatar">pe</span>
+              <span>
+                {connected()
+                  ? "Pedro · chamada de demonstração"
+                  : "Prévia local · sem conexão de voz"}
+              </span>
+            </div>
+          }
+        >
+          <RoomWorkspace />
+        </Show>
+        <Show
+          when={connected()}
+          fallback={
+            <button
+              class="ws-button ws-button--accent"
+              data-ui-sound="off"
+              onClick={() => {
+                setConnected(true);
+                sound.playSound("userJoinVoice");
+              }}
+            >
+              <Phone size={15} />
+              Simular chamada
+            </button>
+          }
+        >
+          <CallControlsTray>{actions}</CallControlsTray>
+        </Show>
       </Show>
     </div>
   );
@@ -496,6 +586,33 @@ function PreviewMembersButton() {
     >
       <Users size={18} />
     </button>
+  );
+}
+function PreviewSfxButton() {
+  const [anchor, setAnchor] = createSignal<HTMLButtonElement>();
+  const id = createUniqueId();
+  return (
+    <>
+      <button
+        type="button"
+        class="call-control"
+        aria-label="Efeitos sonoros"
+        aria-haspopup="dialog"
+        aria-expanded={!!anchor()}
+        onClick={(e) => setAnchor(anchor() ? undefined : e.currentTarget)}
+      >
+        <Music2 />
+      </button>
+      <Show when={anchor()} keyed>
+        {(button) => (
+          <SoundboardQuickMenu
+            anchor={button}
+            id={id}
+            onClose={() => setAnchor(undefined)}
+          />
+        )}
+      </Show>
+    </>
   );
 }
 function PreviewChannels(props: {

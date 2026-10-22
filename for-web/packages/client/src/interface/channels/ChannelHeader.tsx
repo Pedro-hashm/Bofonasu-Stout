@@ -29,6 +29,7 @@ import MdSettings from "@material-design-icons/svg/outlined/settings.svg?compone
 
 import MdKeep from "../../svg/keep.svg?component-solid";
 import { HeaderIcon } from "../common/CommonHeader";
+import { ExpandChatButton } from "../workspace/ExpandChatButton";
 import { useWorkspace } from "../workspace/Workspace";
 
 import { canIHasSidebar, SidebarState } from "./text/TextChannel";
@@ -301,6 +302,7 @@ export function ChannelHeader(props: Props) {
           />
         </Show>
       </Show>
+      <ExpandChatButton />
     </>
   );
 }

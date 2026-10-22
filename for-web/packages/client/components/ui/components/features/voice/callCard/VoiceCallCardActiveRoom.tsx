@@ -2,10 +2,11 @@ import { useLingui } from "@lingui/solid/macro";
 import { getTrackReferenceId } from "@livekit/components-core";
 import { Key } from "@solid-primitives/keyed";
 import { createResizeObserver } from "@solid-primitives/resize-observer";
-import { createEffect, onMount, Show } from "solid-js";
+import { createEffect, createSignal, onMount, Show } from "solid-js";
 import { styled } from "styled-system/jsx";
 
 import { useDevice } from "@revolt/common";
+import { useMobileLayout } from "@revolt/common/lib/mobile";
 import { useVoice } from "@revolt/rtc";
 import { useState } from "@revolt/state";
 import { IconButton } from "@revolt/ui/components/design";
@@ -22,6 +23,7 @@ import {
 } from "lucide-solid";
 import { CallControlButton } from "./CallControlButton";
 import { CallControlsTray } from "./CallControlsTray";
+import { CompactCall, isCompactCallSize } from "./CompactCall";
 
 import { LivingRoomCall } from "@revolt/rtc/living-room/LivingRoomCall";
 import { ParticipantTile } from "./ParticipantTile";
@@ -33,25 +35,49 @@ import { VoiceCallCardStatus } from "./VoiceCallCardStatus";
  */
 export function VoiceCallCardActiveRoom() {
   const state = useState();
+  const voice = useVoice();
+  const mobile = useMobileLayout();
+  const [compact, setCompact] = createSignal(false);
+  let view!: HTMLDivElement;
+  onMount(() =>
+    createResizeObserver(view, (_size, element) => {
+      // Read the border box: compact padding must not change its own breakpoint.
+      setCompact(isCompactCallSize(element.offsetWidth, element.offsetHeight));
+    }),
+  );
 
   return (
-    <View>
-      <Show when={state.livingRoom.enabled} fallback={<Participants />}>
-        <LivingRoomCall />
+    <View ref={view} class="ws-call-view" data-compact={compact()}>
+      <Show
+        when={compact()}
+        fallback={
+          <>
+            <Show when={state.livingRoom.enabled} fallback={<Participants />}>
+              <LivingRoomCall />
+            </Show>
+            <CallControlsTray>
+              {(hide) => (
+                <VoiceCallControls class="ws-call-controls">
+                  <VoiceCallControlHolder class="ws-call-control-holder" left>
+                    <VoiceCallCardStatus />
+                  </VoiceCallControlHolder>
+                  <VoiceCallCardActions size="sm" />
+                  <VoiceCallControlHolder class="ws-call-control-holder" right>
+                    <LayoutButtons onHideTray={hide} />
+                  </VoiceCallControlHolder>
+                </VoiceCallControls>
+              )}
+            </CallControlsTray>
+          </>
+        }
+      >
+        <CompactCall
+          onExpand={() =>
+            voice.toggleLayout(mobile() ? "fullscreen" : "expanded")
+          }
+          tools={(hide) => <LayoutButtons onHideTray={hide} />}
+        />
       </Show>
-      <CallControlsTray>
-        {(hide) => (
-          <VoiceCallControls class="ws-call-controls">
-            <VoiceCallControlHolder class="ws-call-control-holder" left>
-              <VoiceCallCardStatus />
-            </VoiceCallControlHolder>
-            <VoiceCallCardActions size="sm" />
-            <VoiceCallControlHolder class="ws-call-control-holder" right>
-              <LayoutButtons onHideTray={hide} />
-            </VoiceCallControlHolder>
-          </VoiceCallControls>
-        )}
-      </CallControlsTray>
     </View>
   );
 }
